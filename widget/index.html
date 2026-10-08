@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>City Council Meetings</title>
+    <meta name="description" content="Summaries of recent City of Eloy City Council meetings." />
+    <link rel="stylesheet" href="widget.css" />
+    <script type="module" src="widget.js"></script>
+  </head>
+  <body>
+    <main class="ecw" id="ecw" aria-live="polite">
+      <header class="ecw-header">
+        <img class="ecw-seal" src="eloy_seal.jpeg" alt="" width="44" height="44" />
+        <div>
+          <h1 class="ecw-title">City Council Meetings</h1>
+          <p class="ecw-subtitle">Summaries of recent meetings</p>
+        </div>
+      </header>
+      <div id="ecw-content">
+        <p class="ecw-status">Loading meeting summaries…</p>
+        <noscript>
+          <p class="ecw-status">
+            <a href="https://eloyaz.granicus.com/ViewPublisher.php?view_id=1" target="_blank" rel="noopener">
+              View agendas, minutes, and meeting video
+            </a>
+          </p>
+        </noscript>
+      </div>
+    </main>
+  </body>
+</html>

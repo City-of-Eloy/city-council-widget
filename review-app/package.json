@@ -1,0 +1,49 @@
+{
+  "name": "eloy-council-review",
+  "productName": "Eloy Council Summaries",
+  "version": "1.0.0",
+  "description": "Review City Council meeting summaries before they are published to the City website widget.",
+  "main": "main/main.js",
+  "author": "City of Eloy",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "build:renderer": "vite build",
+    "start": "vite build && electron .",
+    "dist": "vite build && electron-builder --win",
+    "test": "node smoke-test.js"
+  },
+  "build": {
+    "appId": "gov.eloy.council-summaries",
+    "productName": "Eloy Council Summaries",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main/**",
+      "dist-renderer/**",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "Eloy Council Summaries Setup.exe"
+    }
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.0",
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3",
+    "vite": "^8.2.2"
+  }
+}

@@ -1,0 +1,8 @@
+node_modules/
+review-app/dist-renderer/
+review-app/release/
+.env
+.env.*
+
+# Unreviewed OpenPublica data for local previews only; never commit it to the public repo
+samples/
