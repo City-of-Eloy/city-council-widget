@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatDate, latestHtml } from "../../../widget/render.js";
 import widgetCss from "../../../widget/widget.css?raw";
-import seal from "../../../widget/eloy_seal.jpeg";
+import seal from "./assets/eloy_seal.jpeg";
 
 const api = window.review;
 

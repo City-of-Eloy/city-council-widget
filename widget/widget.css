@@ -57,16 +57,8 @@ body {
 
 /* Header */
 .ecw-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding-bottom: 12px;
   border-bottom: 3px solid var(--ecw-accent);
-}
-
-.ecw-seal {
-  flex: none;
-  border-radius: 50%;
 }
 
 .ecw-title {
