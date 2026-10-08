@@ -15,7 +15,7 @@ const { toDraft, reviewFlags, publishedRecord, buildPublishedFile } = require(".
 const { getPublished, putPublished, PublishError } = require("./github");
 
 const STATUSES = new Set(["review", "approved", "hidden"]);
-const EDITABLE_FIELDS = ["title", "overview", "details", "topics", "durationMinutes", "recordingUrl"];
+const EDITABLE_FIELDS = ["title", "overview", "details", "durationMinutes", "recordingUrl"];
 
 /** Same published content; two missing records also count as the same. */
 function sameRecord(a, b) {
@@ -182,7 +182,6 @@ class ReviewStore {
     for (const key of EDITABLE_FIELDS) {
       if (fields[key] !== undefined) next[key] = fields[key];
     }
-    next.topics = (Array.isArray(next.topics) ? next.topics : []).map((t) => String(t).trim()).filter(Boolean);
     if (entry.status === "approved" && !String(next.overview || "").trim()) {
       throw new Error("An approved meeting needs an overview. Add one, or move the meeting back to review first.");
     }

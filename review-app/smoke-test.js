@@ -110,7 +110,6 @@ async function main() {
   assert.equal(draft.title, "Regular Meeting");
   assert.equal(draft.overview, "The Council approved the consent agenda.");
   assert.ok(draft.details.startsWith("### Discussion Items"));
-  assert.deepEqual(draft.topics, ["Engineering And Infrastructure"]);
   assert.equal(draft.recordingUrl, "https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=287");
   console.log("ok  draft conversion");
 
@@ -137,7 +136,7 @@ async function main() {
   await a.publish(SETTINGS);
   assert.equal(published().meetings.length, 1);
   assert.deepEqual(Object.keys(published().meetings[0]).sort(), [
-    "date", "details", "durationMinutes", "id", "overview", "recordingUrl", "title", "topics",
+    "date", "details", "durationMinutes", "id", "overview", "recordingUrl", "title",
   ]);
   assert.equal(a.view().pendingCount, 0);
   console.log("ok  approve and publish");

@@ -24,15 +24,7 @@ function fieldsOf(draft) {
     title: draft.title || "",
     overview: draft.overview || "",
     details: draft.details || "",
-    topics: (draft.topics || []).join(", "),
     recordingUrl: draft.recordingUrl || "",
-  };
-}
-
-function toDraftFields(fields) {
-  return {
-    ...fields,
-    topics: fields.topics.split(",").map((t) => t.trim()).filter(Boolean),
   };
 }
 
@@ -154,7 +146,7 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty }) {
   const [beforeRewrite, setBeforeRewrite] = useState(null);
   const saved = useMemo(() => fieldsOf(meeting.draft), [meeting.draft]);
   const dirty = JSON.stringify(fields) !== JSON.stringify(saved);
-  const draft = { ...meeting.draft, ...toDraftFields(fields) };
+  const draft = { ...meeting.draft, ...fields };
   const set = (key) => (e) => {
     const value = e.target.value;
     setFields((f) => ({ ...f, [key]: value }));
@@ -173,7 +165,7 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty }) {
   }, [savedJson]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function persist() {
-    const result = await api.save(meeting.id, toDraftFields(fields));
+    const result = await api.save(meeting.id, fields);
     if (!result.ok) {
       setNotice({ kind: "error", text: result.error });
       return false;
@@ -293,10 +285,6 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty }) {
           <p className="hint">
             Formatting: <code>### Heading</code>, <code>- bullet</code>, <code>1. numbered</code>, <code>**bold**</code>
           </p>
-          <label>
-            Topics <span className="muted">(comma separated)</span>
-            <input value={fields.topics} onChange={set("topics")} />
-          </label>
           <label>
             Video link
             <input value={fields.recordingUrl} onChange={set("recordingUrl")} placeholder="https://…" />

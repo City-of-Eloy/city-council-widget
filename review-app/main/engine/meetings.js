@@ -30,14 +30,6 @@ function meetingKind(title) {
   return "Regular Meeting";
 }
 
-/** "Engineering And Infrastructure (30%)" -> "Engineering And Infrastructure"; drops "Procedural". */
-function cleanTopics(topics) {
-  return (Array.isArray(topics) ? topics : [])
-    .map((t) => String(t).replace(/\s*\(\d+%\)\s*$/, "").trim())
-    .filter((t) => t && !/^(procedural|miscellaneous)$/i.test(t))
-    .slice(0, 4);
-}
-
 /** Split an OpenPublica summary into the opening paragraph and the rest.
  *  The leading "# Title" heading is dropped; the widget shows the date instead. */
 function splitSummary(markdown) {
@@ -82,7 +74,6 @@ function toDraft(meeting) {
     title: meetingKind(meeting.title),
     overview,
     details,
-    topics: cleanTopics(meeting.topics),
     durationMinutes: Number(meeting.duration_minutes) || null,
     // The City's Granicus player when there is one, otherwise OpenPublica's archive copy.
     recordingUrl: recordingPageUrl(meeting.source_url) || httpsOrEmpty(meeting.video_url),
@@ -140,7 +131,6 @@ function publishedRecord(draft) {
     title: draft.title,
     overview: draft.overview,
     details: draft.details,
-    topics: draft.topics || [],
     durationMinutes: draft.durationMinutes || null,
     recordingUrl: httpsOrEmpty(draft.recordingUrl),
   };
@@ -162,7 +152,6 @@ module.exports = {
   publishedRecord,
   buildPublishedFile,
   splitSummary,
-  cleanTopics,
   meetingKind,
   recordingPageUrl,
 };

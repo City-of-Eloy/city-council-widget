@@ -26,14 +26,6 @@ function durationHtml(m) {
   return m.durationMinutes ? `${Number(m.durationMinutes)} minutes` : "";
 }
 
-function topicsHtml(m) {
-  const topics = Array.isArray(m.topics) ? m.topics.filter(Boolean) : [];
-  if (!topics.length) return "";
-  return `<ul class="ecw-topics" aria-label="Topics">${topics
-    .map((t) => `<li>${escapeHtml(t)}</li>`)
-    .join("")}</ul>`;
-}
-
 function actionsHtml(m) {
   const watch = safeUrl(m.recordingUrl);
   if (!watch) return "";
@@ -55,7 +47,6 @@ export function latestHtml(m, { open = false } = {}) {
     <h2 class="ecw-date" id="ecw-latest-date">${formatDate(m.date)}</h2>
     <p class="ecw-meta">${meta}</p>
     <div class="ecw-md ecw-overview">${renderMarkdown(m.overview)}</div>
-    ${topicsHtml(m)}
     ${detailsHtml(m, open)}
     ${actionsHtml(m)}
   </article>`;
@@ -72,7 +63,6 @@ export function rowHtml(m) {
     <div class="ecw-row-body">
       ${duration ? `<p class="ecw-meta">${duration}</p>` : ""}
       <div class="ecw-md ecw-overview">${renderMarkdown(m.overview)}</div>
-      ${topicsHtml(m)}
       ${detailsHtml(m)}
       ${actionsHtml(m)}
     </div>
