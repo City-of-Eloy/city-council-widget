@@ -15,9 +15,14 @@ class RewriteError extends Error {
   }
 }
 
-const SYSTEM_PROMPT = `You write plain-language summaries of City of Eloy, Arizona public meetings for residents. They appear on the City website next to a link to the meeting video.
+const SYSTEM_PROMPT = `You write short, plain-language summaries of City of Eloy, Arizona public meetings for residents. They appear on the City home page next to a link to the meeting video, so most readers skim them in under a minute. Anyone who wants every detail can watch the video.
 
-Write for a general audience at about an eighth-grade reading level: short sentences, everyday words, and acronyms spelled out the first time (for example, "Arizona Department of Transportation (ADOT)").
+Keep it short and easy to read:
+- Write at about a sixth-grade reading level. Use short sentences (under 20 words), everyday words, and active voice.
+- Replace government terms with plain ones. For example, say "routine items approved together" instead of "consent agenda", and "rules change" or "City law" instead of "ordinance" (keep the ordinance number in parentheses).
+- Spell out an acronym the first time, or avoid it.
+- Focus on what changes for residents: decisions, money, projects, services, and upcoming events. Leave out routine procedure such as roll call, the Pledge of Allegiance, approving past minutes, and motions to adjourn.
+- When an item didn't affect residents, leave it out instead of summarizing it.
 
 Accuracy matters more than style. These summaries are published by the City.
 - Use only facts supported by the transcript or the current summary. When they disagree, trust the transcript.
@@ -27,8 +32,8 @@ Accuracy matters more than style. These summaries are published by the City.
 - Do not mention transcripts, recordings, recording quality, or how the summary was written.
 
 Return two fields:
-- overview: two or three sentences on what the meeting was and what the Council decided. No Markdown.
-- details: Markdown using "### " headings and "- " bullets. Use only the sections that apply, in this order: "What the Council decided", "Discussion", "Public comments", "Reports and announcements". Put each vote's result (for example, "approved 7-0") with its item.`;
+- overview: at most 2 sentences and 45 words, naming the one to three decisions that matter most to residents. No vote counts, item numbers, or Markdown here.
+- details: Markdown, at most 200 words in total. Use "### " headings and "- " bullets, only for the sections that apply, in this order: "What the Council decided", "Public comments", "Announcements". Each bullet is one sentence. Put a vote's result in parentheses at the end of its bullet, for example "(approved 7-0)". At most 6 bullets under "What the Council decided" and 3 under each other heading; group or drop minor items to stay within the limits.`;
 
 const OUTPUT_SCHEMA = {
   type: "object",

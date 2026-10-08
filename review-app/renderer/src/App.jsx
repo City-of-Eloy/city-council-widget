@@ -19,6 +19,19 @@ const PENDING_LABELS = {
 
 const STATUS_LABELS = { review: "Needs review", approved: "Approved", hidden: "Hidden" };
 
+// Length targets, matching what the Claude rewrite is asked for.
+const OVERVIEW_WORDS = 45;
+const DETAILS_WORDS = 200;
+
+function WordCount({ text, limit }) {
+  const words = (String(text).replace(/[#*_\-[\]()]/g, " ").match(/\S+/g) || []).length;
+  return (
+    <span className={words > limit ? "word-count over" : "word-count"}>
+      {words} / {limit} words
+    </span>
+  );
+}
+
 function fieldsOf(draft) {
   return {
     title: draft.title || "",
@@ -275,11 +288,13 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty }) {
             <input value={fields.title} onChange={set("title")} />
           </label>
           <label>
-            Overview <span className="muted">(always visible; two or three sentences)</span>
+            Overview <span className="muted">(always visible; one or two short sentences)</span>
+            <WordCount text={fields.overview} limit={OVERVIEW_WORDS} />
             <textarea rows={5} value={fields.overview} onChange={set("overview")} />
           </label>
           <label>
             Full summary <span className="muted">(shown under "Read the full summary")</span>
+            <WordCount text={fields.details} limit={DETAILS_WORDS} />
             <textarea className="tall" rows={16} value={fields.details} onChange={set("details")} />
           </label>
           <p className="hint">
