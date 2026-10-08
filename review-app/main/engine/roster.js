@@ -21,7 +21,8 @@ const ENTITIES = { "&quot;": '"', "&amp;": "&", "&#39;": "'", "&nbsp;": " ", "&r
 function pageText(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<(br|\/p|\/div|\/li|\/h\d)[^>]*>/gi, "\n")
+    // Block-level tags start a new line, so menus never run into the roster heading.
+    .replace(/<\/?(br|p|div|li|ul|h\d|nav|header|footer|section|table|tr)\b[^>]*>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
     .replace(/&[a-z#0-9]+;/gi, (e) => ENTITIES[e] || " ")
     .replace(/[ \t]+/g, " ")
