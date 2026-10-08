@@ -209,6 +209,18 @@ async function main() {
   assert.ok(fs.readdirSync(corruptDir).some((f) => f.startsWith("review-state.json.corrupt-")), "damaged state is kept");
   console.log("ok  guard rails");
 
+  // Council roster read from the City Council page (offline sample of its markup)
+  const { rosterSection, pageText } = require("./main/engine/roster");
+  const page = pageText(`<nav>Home Contact Us</nav><h2>2025 City Council</h2>
+    <p>Top (left to right): Vice-Mayor Michelle McKinley-Tarango, Mayor Andrew Sutton, Councilmember Daniel Snyder.</p>
+    <p>Bottom: Councilmember Michael Vodrazka, Councilmember Josephine &quot;JoAnne&quot; Galindo, Councilmember Sara Curtis</p>
+    <h2>Mission Statement</h2><p>Operating under the Council-Manager form of government...</p>`);
+  const roster = rosterSection(page);
+  assert.ok(roster.startsWith("2025 City Council"), "keeps the heading, drops the menu");
+  assert.ok(roster.includes('Josephine "JoAnne" Galindo') && !roster.includes("Mission"));
+  assert.equal(rosterSection(pageText("<p>Page moved</p>")), "", "unrecognized page -> built-in list");
+  console.log("ok  council roster");
+
   console.log(`\nSMOKE TEST PASSED (${github.puts.length} publishes: ${github.puts.join(" | ")})`);
 }
 

@@ -4,6 +4,8 @@
  */
 "use strict";
 
+const { loadCouncilRoster } = require("./roster");
+
 const MODEL = "claude-opus-5-5";
 const MAX_TRANSCRIPT_CHARS = 2000000; // ~500k tokens, well inside the 1M context
 
@@ -29,6 +31,7 @@ Accuracy matters more than style. These summaries are published by the City.
 - Keep dollar amounts, vote counts, and ordinance, resolution, and contract numbers exactly as stated. If one is unclear, leave it out rather than guess.
 - Stay neutral. Report what was presented, discussed, and decided without judging it.
 - Name the Mayor, Councilmembers, and City staff by title. Do not name members of the public; describe them instead (for example, "a resident" or "a local business owner").
+- Spell the Mayor's, Vice Mayor's, Councilmembers', and City Clerk's names exactly as in the council roster, which comes from the City's own website. The transcript is machine-generated and often misspells names, so when a name in it sounds like someone on the roster, use the roster spelling and title. Use the name a member goes by when the roster shows one in quotes (for example, JoAnne). Give the title and full name the first time (for example, "Vice Mayor Michelle McKinley-Tarango"), then the title and last name. If you can't tell which Councilmember spoke or made a motion, write "a Councilmember" instead of guessing.
 - Do not mention transcripts, recordings, recording quality, or how the summary was written.
 
 Return two fields:
@@ -78,11 +81,15 @@ function friendlyApiError(e, Anthropic) {
   return new RewriteError(`Anthropic API error: ${e.message || e}`);
 }
 
-function buildUserPrompt(meeting, draft) {
+function buildUserPrompt(meeting, draft, roster) {
   const transcript = String(meeting.transcript || "");
   return [
     `Meeting: ${meeting.title || draft.title}`,
     `Date: ${meeting.date || draft.date}`,
+    "",
+    `<council_roster source="${roster.source}">`,
+    roster.text,
+    "</council_roster>",
     "",
     "<current_summary>",
     draft.overview || "",
@@ -101,6 +108,9 @@ async function rewriteSummary(meeting, draft, { apiKey, onProgress } = {}) {
     throw new RewriteError("This meeting's transcript is too long to send in one request. Edit the summary by hand instead.");
   }
 
+  if (onProgress) onProgress("Checking the current Council roster on eloyaz.gov…");
+  const roster = await loadCouncilRoster();
+
   const Anthropic = require("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey, timeout: 600000 });
 
@@ -110,7 +120,7 @@ async function rewriteSummary(meeting, draft, { apiKey, onProgress } = {}) {
       model: MODEL,
       max_tokens: 32000,
       system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: buildUserPrompt(meeting, draft) }],
+      messages: [{ role: "user", content: buildUserPrompt(meeting, draft, roster) }],
       output_config: {
         effort: "high",
         format: { type: "json_schema", schema: OUTPUT_SCHEMA },
