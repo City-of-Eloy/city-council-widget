@@ -1,0 +1,4 @@
+<iframe src="https://city-of-eloy.github.io/city-council-widget/"
+        title="City Council meeting summaries"
+        style="width:100%; height:900px; border:0;" loading="lazy"></iframe>
+<script src="https://city-of-eloy.github.io/city-council-widget/embed.js" async></script>

@@ -27,7 +27,7 @@ OpenPublica ──► Review app (staff PC) ──► GitHub: widget/data/meetin
 2. **Turn on Pages.** In the repository, open Settings → Pages and set Source to **GitHub Actions**. The widget is then served at `https://city-of-eloy.github.io/city-council-widget/`.
 3. **Publishing token.** Create a fine-grained personal access token at github.com → Settings → Developer settings. Limit it to this one repository, with **Contents: Read and write**, and give it an expiry date. Paste it into the review app's Settings on each reviewer's PC. It is encrypted for that Windows account.
 4. **Optional Claude key.** For the "Rewrite in plain language" button, paste an Anthropic API key in Settings. Use a dedicated Console workspace with a monthly spend limit. Each rewrite sends one meeting transcript to Claude Opus 5.5.
-5. **Embed on eloyaz.gov.** In CivicPlus, add an HTML/iframe widget:
+5. **Embed on eloyaz.gov.** In CivicPlus, add a Custom HTML widget and paste the contents of **`CivicPlus Embed Code.txt`** (top of this folder). This is the only code that goes into CivicPlus. Never paste files from `widget/` there; they only work on GitHub Pages.
 
    ```html
    <iframe src="https://city-of-eloy.github.io/city-council-widget/"
