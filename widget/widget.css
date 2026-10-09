@@ -55,33 +55,13 @@ body {
   white-space: nowrap;
 }
 
-/* Header */
-.ecw-header {
-  padding-bottom: 12px;
-  border-bottom: 3px solid var(--ecw-accent);
-}
-
-.ecw-title {
-  margin: 0;
-  font-size: 1.35rem;
-  line-height: 1.2;
-  color: var(--ecw-accent-dark);
-}
-
-.ecw-subtitle {
-  margin: 2px 0 0;
-  color: var(--ecw-ink-soft);
-  font-size: 0.95rem;
-}
-
 .ecw-status {
-  margin: 20px 0;
+  margin: 4px 0 20px;
   color: var(--ecw-ink-soft);
 }
 
 /* Latest meeting */
 .ecw-latest {
-  margin-top: 16px;
   padding: 18px 20px;
   background: var(--ecw-surface);
   border: 1px solid var(--ecw-line);
