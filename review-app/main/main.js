@@ -67,10 +67,12 @@ function createWindow() {
   if (process.env.ELOY_SCREENSHOT) {
     mainWindow.webContents.once("did-finish-load", async () => {
       await new Promise((r) => setTimeout(r, Number(process.env.ELOY_SCREENSHOT_DELAY) || 2500));
-      // ELOY_SCREENSHOT_CLICK=<css selector> clicks that element first (for example the first meeting).
-      if (process.env.ELOY_SCREENSHOT_CLICK) {
+      // ELOY_SCREENSHOT_CLICK="<css selector>|<css selector>…" clicks those in order first
+      // (for example the first meeting, then its View transcript link).
+      for (const selector of (process.env.ELOY_SCREENSHOT_CLICK || "").split("|").filter(Boolean)) {
         await mainWindow.webContents.executeJavaScript(
-          `document.querySelector(${JSON.stringify(process.env.ELOY_SCREENSHOT_CLICK)})?.click()`
+          `[...document.querySelectorAll(${JSON.stringify(selector.replace(/:text\(.*\)$/, ""))})]` +
+            `.find((el) => ${JSON.stringify((selector.match(/:text\((.*)\)$/) || [])[1] || "")} === "" || el.textContent.trim() === ${JSON.stringify((selector.match(/:text\((.*)\)$/) || [])[1] || "")})?.click()`
         );
         await new Promise((r) => setTimeout(r, 1000));
       }
@@ -223,13 +225,49 @@ ipcMain.handle("meeting:cancel", () => {
   return { ok: true };
 });
 
-ipcMain.handle("transcript:open", async (_e, id) => {
+/** The saved transcript file for a meeting, or null. Only files in the app's own Transcripts folder. */
+function transcriptFor(id) {
   const meeting = store.view().meetings.find((m) => m.id === id);
   const dir = path.join(outputDir(), "Transcripts");
-  const file = meeting && meeting.clipId ? transcripts.findTranscript(dir, meeting.clipId) : null;
+  return meeting && meeting.clipId ? transcripts.findTranscript(dir, meeting.clipId) : null;
+}
+
+/** The transcript for the in-app viewer: header lines, body, and the Granicus player link. */
+ipcMain.handle("transcript:read", (_e, id) => {
+  const file = transcriptFor(id);
+  if (!file) return { ok: false, error: "No transcript is saved for this meeting yet." };
+  try {
+    const lines = fs.readFileSync(file, "utf-8").split(/\r?\n/);
+    const rule = lines.indexOf("----");
+    const header = rule >= 0 ? lines.slice(0, rule).filter(Boolean) : [];
+    const body = (rule >= 0 ? lines.slice(rule + 1) : lines).join("\n").trim();
+    const clipM = path.basename(file).match(/\(clip (\d+)\)\.txt$/i);
+    const clipId = clipM ? Number(clipM[1]) : null;
+    return {
+      ok: true,
+      name: path.basename(file),
+      header,
+      body,
+      clipId,
+      playerUrl: clipId ? `${granicus.SITE}/player/clip/${clipId}?view_id=1` : null,
+    };
+  } catch (e) {
+    return { ok: false, error: `The transcript could not be read (${e.message || e}).` };
+  }
+});
+
+ipcMain.handle("transcript:open", async (_e, id) => {
+  const file = transcriptFor(id);
   if (!file) return { ok: false, error: "No transcript is saved for this meeting yet." };
   const err = await shell.openPath(file);
   return { ok: !err, error: err || undefined };
+});
+
+ipcMain.handle("transcript:showInFolder", (_e, id) => {
+  const file = transcriptFor(id);
+  if (!file) return { ok: false };
+  shell.showItemInFolder(file);
+  return { ok: true };
 });
 
 ipcMain.handle("publish", () =>

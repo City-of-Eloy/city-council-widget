@@ -11,7 +11,9 @@ contextBridge.exposeInMainWorld("review", {
   /** options: { retranscribe } */
   summarize: (id, draft, options) => ipcRenderer.invoke("meeting:summarize", id, draft, options),
   cancel: () => ipcRenderer.invoke("meeting:cancel"),
+  readTranscript: (id) => ipcRenderer.invoke("transcript:read", id),
   openTranscript: (id) => ipcRenderer.invoke("transcript:open", id),
+  showTranscriptInFolder: (id) => ipcRenderer.invoke("transcript:showInFolder", id),
   publish: () => ipcRenderer.invoke("publish"),
   saveSettings: (update) => ipcRenderer.invoke("settings:save", update),
   openExternal: (url) => ipcRenderer.invoke("open:external", url),

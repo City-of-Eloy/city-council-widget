@@ -103,6 +103,21 @@ async function main() {
   assert.equal(formatDate(""), "", "a missing date renders as nothing, not Invalid Date");
   console.log("ok  markdown renderer");
 
+  // Transcript viewer rows
+  const { parseTranscript, speakerClass } = await import(
+    pathToFileURL(path.join(__dirname, "renderer", "src", "transcript.js")).href
+  );
+  const rows = parseTranscript(
+    "[00:00:01] Speaker 1: I'll call the meeting\nto order.\n\n[01:02:03] Speaker 2: Second.\n\n--- Part 2 of 2 (starts at 01:00:00) ---"
+  );
+  assert.equal(rows.length, 3);
+  assert.deepEqual([rows[0].time, rows[0].sec, rows[0].speaker, rows[0].text], ["0:01", 1, "Speaker 1", "I'll call the meeting to order."]);
+  assert.deepEqual([rows[1].time, rows[1].sec], ["1:02:03", 3723], "hour-long times keep the hour");
+  assert.equal(rows[2].kind, "note", "part markers are notes, not turns");
+  assert.equal(speakerClass("Speaker 9"), "sp-1");
+  assert.equal(speakerClass("Speaker ?"), "sp-x");
+  console.log("ok  transcript viewer");
+
   // Granicus pages (fixtures)
   const listing = granicus.parseListingHtml(fixture("granicus-listing.html"));
   const first = listing[0];

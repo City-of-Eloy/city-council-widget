@@ -55,7 +55,7 @@ Then click **Publish to website**. The site updates within a few minutes. Editin
 
 If two people review on different PCs, each **Check for new meetings** picks up what the other published. The app refuses to publish over changes it hasn't seen.
 
-**Transcripts** are saved in `Documents\Eloy Minutes\Transcripts`, the same folder the City Clerk's **Eloy Minutes** app uses, with the same file names. A meeting transcribed by either app is reused by the other, so it is paid for once. "Speaker N" labels in a transcript are automatic and do not identify people; Claude is told to name a Councilmember only when the transcript makes it clear, and to take item titles, numbers, and amounts from the agenda. Names in `review-app/resources/keyterms.txt` help Deepgram spell Council and staff names.
+**Transcripts** are saved in `Documents\Eloy Minutes\Transcripts`, the same folder the City Clerk's **Eloy Minutes** app uses, with the same file names. A meeting transcribed by either app is reused by the other, so it is paid for once. **View transcript** (under the fields in the editor) shows it in the app with search; each timestamp opens the Granicus player at that moment. "Speaker N" labels in a transcript are automatic and do not identify people; Claude is told to name a Councilmember only when the transcript makes it clear, and to take item titles, numbers, and amounts from the agenda. Names in `review-app/resources/keyterms.txt` help Deepgram spell Council and staff names.
 
 ## How a summary is made
 

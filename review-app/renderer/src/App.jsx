@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { formatDate, latestHtml } from "../../../widget/render.js";
 import widgetCss from "../../../widget/widget.css?raw";
 import seal from "./assets/eloy_seal.jpeg";
+import { parseTranscript, speakerClass } from "./transcript.js";
 
 const api = window.review;
 
@@ -163,8 +164,133 @@ function Settings({ settings, onClose, onSaved }) {
   );
 }
 
+function Highlight({ text, query }) {
+  if (!query) return text;
+  const parts = [];
+  const lower = text.toLowerCase();
+  let i = 0;
+  for (let at = lower.indexOf(query); at !== -1; at = lower.indexOf(query, i)) {
+    if (at > i) parts.push(text.slice(i, at));
+    parts.push(<mark key={at}>{text.slice(at, at + query.length)}</mark>);
+    i = at + query.length;
+  }
+  parts.push(text.slice(i));
+  return parts;
+}
+
+/** The saved transcript for a meeting, with search. Each timestamp opens the Granicus player at that moment. */
+function TranscriptModal({ meeting, onClose }) {
+  const [doc, setDoc] = useState(null);
+  const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [onlyMatches, setOnlyMatches] = useState(true);
+
+  useEffect(() => {
+    let live = true;
+    api.readTranscript(meeting.id).then((res) => {
+      if (!live) return;
+      if (res.ok) setDoc({ ...res, items: parseTranscript(res.body) });
+      else setError(res.error);
+    });
+    return () => {
+      live = false;
+    };
+  }, [meeting.id]);
+
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const q = query.trim().toLowerCase();
+  const matches = (it) => it.text.toLowerCase().includes(q);
+  const count = doc && q ? doc.items.filter(matches).length : 0;
+  const shown = doc ? (q && onlyMatches ? doc.items.filter(matches) : doc.items) : [];
+  const watchAt = (sec) => {
+    if (doc && doc.playerUrl) api.openExternal(sec ? `${doc.playerUrl}&entrytime=${Math.max(0, sec - 3)}` : doc.playerUrl);
+  };
+
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="transcript-title">
+      <div className="modal transcript">
+        <header className="transcript-head">
+          <div>
+            <h2 id="transcript-title">Transcript</h2>
+            <p className="muted">{doc ? doc.name : meeting.transcript ? meeting.transcript.name : ""}</p>
+          </div>
+          <button onClick={onClose}>Close</button>
+        </header>
+        <p className="hint">
+          "Speaker" numbers are automatic and do not identify people. Click a time to watch that moment on Granicus.
+        </p>
+        {error && <p className="error">{error}</p>}
+        {!doc && !error && <p className="muted">Loading…</p>}
+        {doc && (
+          <>
+            <div className="transcript-toolbar">
+              <input
+                className="search"
+                type="search"
+                placeholder="Search this transcript…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              {q && (
+                <label className="inline">
+                  <input type="checkbox" checked={onlyMatches} onChange={(e) => setOnlyMatches(e.target.checked)} />
+                  Only matching ({count})
+                </label>
+              )}
+              <span className="spacer" />
+              {doc.playerUrl && <button onClick={() => watchAt(0)}>Watch on Granicus</button>}
+              <button onClick={() => api.openTranscript(meeting.id)}>Open in Notepad</button>
+              <button onClick={() => api.showTranscriptInFolder(meeting.id)}>Show in folder</button>
+            </div>
+            <details className="transcript-details">
+              <summary>About this transcript</summary>
+              <div className="transcript-header">
+                {doc.header.map((line, i) => (
+                  <div key={i}>{line}</div>
+                ))}
+              </div>
+            </details>
+            <div className="transcript-body">
+              {shown.length === 0 && <p className="muted">No lines match “{query.trim()}”.</p>}
+              {shown.map((it, i) =>
+                it.kind === "turn" ? (
+                  <div key={i} className="turn">
+                    <button
+                      className="turn-time"
+                      title={doc.playerUrl ? "Watch from here on Granicus" : ""}
+                      onClick={() => watchAt(it.sec)}
+                      disabled={!doc.playerUrl}
+                    >
+                      {it.time}
+                    </button>
+                    <div className="turn-body">
+                      <span className={`turn-speaker ${speakerClass(it.speaker)}`}>{it.speaker}</span>
+                      <p>
+                        <Highlight text={it.text} query={q} />
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={i} className="turn-note">
+                    <Highlight text={it.text} query={q} />
+                  </div>
+                )
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** What Granicus knows about the recording, and whether a transcript is on file. */
-function SourceInfo({ meeting }) {
+function SourceInfo({ meeting, onViewTranscript }) {
   const s = meeting.source || {};
   const link = (url, text) => (
     <button className="link-button" onClick={() => api.openExternal(url)}>
@@ -198,8 +324,8 @@ function SourceInfo({ meeting }) {
           {meeting.transcript ? (
             <>
               Transcript on file{savedAt ? ` (saved ${savedAt})` : ""}.{" "}
-              <button className="link-button" onClick={() => api.openTranscript(meeting.id)}>
-                Open transcript
+              <button className="link-button" onClick={onViewTranscript}>
+                View transcript
               </button>
             </>
           ) : (
@@ -217,6 +343,7 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty, progress 
   const [retranscribe, setRetranscribe] = useState(false);
   const [job, setJob] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(false);
   const saved = useMemo(() => fieldsOf(meeting.draft), [meeting.draft]);
   const dirty = JSON.stringify(fields) !== JSON.stringify(saved);
   const draft = { ...meeting.draft, ...fields };
@@ -409,7 +536,7 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty, progress 
             <input value={fields.recordingUrl} onChange={set("recordingUrl")} placeholder="https://…" />
           </label>
 
-          <SourceInfo meeting={meeting} />
+          <SourceInfo meeting={meeting} onViewTranscript={() => setShowTranscript(true)} />
         </fieldset>
 
         <div className="preview">
@@ -463,6 +590,8 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty, progress 
           </button>
         )}
       </footer>
+
+      {showTranscript && <TranscriptModal meeting={meeting} onClose={() => setShowTranscript(false)} />}
     </section>
   );
 }
