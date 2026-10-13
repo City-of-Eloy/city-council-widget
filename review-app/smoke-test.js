@@ -287,7 +287,7 @@ async function main() {
   seedGithub({ version: 1, updated: "2026-10-08T22:33:19.885Z", meetings: [legacy, foreign] });
   const c = new ReviewStore(tempDir());
   await refresh(c);
-  assert.equal(byId(c, "6aa8b9499ea41e8f4db6cf2f"), undefined, "the OpenPublica id is gone");
+  assert.equal(byId(c, "6aa8b9499ea41e8f4db6cf2f"), undefined, "the old id is gone");
   const migrated = byId(c, M1);
   assert.equal(migrated.status, "approved");
   assert.equal(migrated.draft.overview, "Old overview.");

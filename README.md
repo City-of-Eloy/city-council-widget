@@ -106,5 +106,5 @@ The installer bundles an unmodified ffmpeg 6.1.1 build (from the `ffmpeg-static`
 
 ## History
 
-- **2026-10-13 (v2.0):** OpenPublica removed. Recordings and agendas come from Granicus, transcripts from Deepgram, summaries from Claude. Meetings published before this keep their place on the website; their ids change to the Granicus clip number (`granicus-287`) on the next publish.
-- **2026-10-08 (v1.0):** First version, built from the City Clerk's minutes-drafting tool, with summaries from OpenPublica.
+- **2026-10-13 (v2.0):** Recordings and agendas come from Granicus, transcripts from Deepgram, summaries from Claude. Meetings published before this keep their place on the website; their ids change to the Granicus clip number (`granicus-287`) on the next publish.
+- **2026-10-08 (v1.0):** First version, built from the City Clerk's minutes-drafting tool, with summaries from a third-party service.

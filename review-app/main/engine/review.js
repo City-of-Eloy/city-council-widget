@@ -45,7 +45,7 @@ function normalizeData(data) {
   return { ...data, meetings: Array.from((data && data.meetings) || []).map(normalizeRecord) };
 }
 
-/** Meetings saved before the move to Granicus had OpenPublica ids; key them by Granicus clip instead. */
+/** Meetings saved before the move to Granicus had ids from the earlier summary service; key them by Granicus clip instead. */
 function migrate(saved) {
   const meetings = {};
   for (const entry of Object.values(saved.meetings || {})) {

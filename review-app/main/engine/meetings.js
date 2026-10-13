@@ -27,7 +27,7 @@ function clipIdFromUrl(url) {
 }
 
 /** The clip a record is about: from its id, or from its video link for records
- *  published before the move to Granicus (they had OpenPublica ids). */
+ *  published before the move to Granicus (their ids came from the earlier summary service). */
 function recordClipId(record) {
   const m = String((record && record.id) || "").match(/^granicus-(\d+)$/);
   return m ? Number(m[1]) : clipIdFromUrl(record && record.recordingUrl);

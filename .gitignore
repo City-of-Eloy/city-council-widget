@@ -4,5 +4,5 @@ review-app/release/
 .env
 .env.*
 
-# Unreviewed OpenPublica data for local previews only; never commit it to the public repo
+# Sample data for local previews only; never commit it to the public repo
 samples/
