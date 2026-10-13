@@ -11,11 +11,14 @@ function parseDate(iso) {
 }
 
 export function formatDate(iso, style = "long") {
+  if (!/^\d{4}-\d{2}-\d{2}/.test(String(iso || ""))) return "";
   const options =
     style === "long"
       ? { weekday: "long", month: "long", day: "numeric", year: "numeric" }
       : { month: "short", day: "numeric", year: "numeric" };
-  return parseDate(iso).toLocaleDateString("en-US", options);
+  const date = parseDate(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", options);
 }
 
 function safeUrl(url) {

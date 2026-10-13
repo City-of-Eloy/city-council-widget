@@ -1,6 +1,6 @@
-/** Per-user settings stored in the app's userData folder. The Anthropic API key
- *  and GitHub token are encrypted with Electron safeStorage (Windows DPAPI), so
- *  a copied settings.json is useless on another account or computer.
+/** Per-user settings stored in the app's userData folder. The API keys and the
+ *  GitHub token are encrypted with Electron safeStorage (Windows DPAPI), so a
+ *  copied settings.json is useless on another account or computer.
  */
 "use strict";
 
@@ -14,7 +14,8 @@ const DEFAULTS = {
   widgetUrl: "https://city-of-eloy.github.io/city-council-widget/",
 };
 
-const SECRET_FIELDS = ["anthropicApiKey", "githubToken"];
+const TEXT_FIELDS = ["githubRepo", "githubBranch", "widgetUrl"];
+const SECRET_FIELDS = ["anthropicApiKey", "deepgramApiKey", "githubToken"];
 
 function settingsPath() {
   return path.join(app.getPath("userData"), "settings.json");
@@ -50,21 +51,37 @@ function decrypt(value) {
   }
 }
 
+/** A message when a pasted key is clearly the wrong one, else null. An empty value removes the key. */
+function validateSecret(field, value) {
+  const v = String(value || "").trim();
+  if (!v) return null;
+  if (field === "anthropicApiKey" && !v.startsWith("sk-ant-")) {
+    return "That doesn't look like an Anthropic API key. It should start with sk-ant-.";
+  }
+  if (field === "deepgramApiKey") {
+    if (v.startsWith("sk-ant-")) return "That is the Anthropic key. The Deepgram key goes in the Deepgram box.";
+    if (v.length < 20 || /\s/.test(v)) return "That doesn't look like a Deepgram API key. Check that the whole key was copied.";
+  }
+  return null;
+}
+
 function loadSettings() {
   const raw = readRaw();
-  const settings = {
-    githubRepo: String(raw.githubRepo || DEFAULTS.githubRepo),
-    githubBranch: String(raw.githubBranch || DEFAULTS.githubBranch),
-    widgetUrl: String(raw.widgetUrl || DEFAULTS.widgetUrl),
-  };
+  const settings = {};
+  for (const field of TEXT_FIELDS) settings[field] = String(raw[field] || DEFAULTS[field]);
   for (const field of SECRET_FIELDS) settings[field] = decrypt(raw[`${field}Encrypted`]);
   return settings;
 }
 
 /** Fields left out of `update` are kept; a secret set to "" is removed. */
 function saveSettings(update) {
+  for (const field of SECRET_FIELDS) {
+    if (update[field] === undefined) continue;
+    const problem = validateSecret(field, update[field]);
+    if (problem) throw new Error(problem);
+  }
   const raw = readRaw();
-  for (const field of ["githubRepo", "githubBranch", "widgetUrl"]) {
+  for (const field of TEXT_FIELDS) {
     if (update[field] !== undefined) raw[field] = String(update[field]).trim();
   }
   for (const field of SECRET_FIELDS) {
@@ -81,8 +98,9 @@ function publicSettings(settings = loadSettings()) {
     githubBranch: settings.githubBranch,
     widgetUrl: settings.widgetUrl,
     hasAnthropicApiKey: Boolean(settings.anthropicApiKey),
+    hasDeepgramApiKey: Boolean(settings.deepgramApiKey),
     hasGithubToken: Boolean(settings.githubToken),
   };
 }
 
-module.exports = { loadSettings, saveSettings, publicSettings };
+module.exports = { loadSettings, saveSettings, publicSettings, validateSecret };

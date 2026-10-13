@@ -19,7 +19,7 @@ const PENDING_LABELS = {
 
 const STATUS_LABELS = { review: "Needs review", approved: "Approved", hidden: "Hidden" };
 
-// Length targets, matching what the Claude rewrite is asked for.
+// Length targets, matching what Claude is asked for.
 const OVERVIEW_WORDS = 45;
 const DETAILS_WORDS = 200;
 
@@ -34,11 +34,20 @@ function WordCount({ text, limit }) {
 
 function fieldsOf(draft) {
   return {
+    date: draft.date || "",
     title: draft.title || "",
     overview: draft.overview || "",
     details: draft.details || "",
     recordingUrl: draft.recordingUrl || "",
   };
+}
+
+function hasSummary(fields) {
+  return Boolean(String(fields.overview).trim() || String(fields.details).trim());
+}
+
+function shortDate(iso) {
+  return formatDate(iso, "short") || "Date needed";
 }
 
 function Preview({ draft }) {
@@ -61,14 +70,16 @@ function Settings({ settings, onClose, onSaved }) {
     widgetUrl: settings.widgetUrl,
     githubToken: "",
     anthropicApiKey: "",
+    deepgramApiKey: "",
   });
   const [error, setError] = useState("");
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
   async function save() {
     const update = { githubRepo: form.githubRepo, githubBranch: form.githubBranch, widgetUrl: form.widgetUrl };
-    if (form.githubToken.trim()) update.githubToken = form.githubToken;
-    if (form.anthropicApiKey.trim()) update.anthropicApiKey = form.anthropicApiKey;
+    for (const key of ["anthropicApiKey", "deepgramApiKey", "githubToken"]) {
+      if (form[key].trim()) update[key] = form[key];
+    }
     const result = await api.saveSettings(update);
     if (!result.ok) return setError(result.error);
     onSaved(result.state);
@@ -79,10 +90,45 @@ function Settings({ settings, onClose, onSaved }) {
     if (result.ok) onSaved(result.state, true);
   }
 
+  const secret = (label, key, saved, placeholder) => (
+    <label>
+      {label} {saved && <span className="saved">saved</span>}
+      <input
+        type="password"
+        value={form[key]}
+        onChange={set(key)}
+        placeholder={saved ? "Leave blank to keep the saved one" : placeholder}
+      />
+    </label>
+  );
+  const removeButton = (key, saved, text) =>
+    saved && (
+      <>
+        {" "}
+        <button className="link-button" onClick={() => remove(key)}>
+          {text}
+        </button>
+      </>
+    );
+
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="settings-title">
       <div className="modal">
         <h2 id="settings-title">Settings</h2>
+
+        <h3>Writing summaries</h3>
+        {secret("Anthropic API key", "anthropicApiKey", settings.hasAnthropicApiKey, "sk-ant-…")}
+        <p className="hint">
+          Claude writes each summary from the meeting transcript and the posted agenda. Use a dedicated Console
+          workspace with a monthly spend limit.
+          {removeButton("anthropicApiKey", settings.hasAnthropicApiKey, "Remove saved key")}
+        </p>
+        {secret("Deepgram API key", "deepgramApiKey", settings.hasDeepgramApiKey, "Deepgram key")}
+        <p className="hint">
+          Deepgram turns the Granicus recording into a transcript, about $0.40 for a 90-minute meeting. Each
+          meeting's transcript is saved and reused.
+          {removeButton("deepgramApiKey", settings.hasDeepgramApiKey, "Remove saved key")}
+        </p>
 
         <h3>Publishing to the website</h3>
         <label>
@@ -93,53 +139,16 @@ function Settings({ settings, onClose, onSaved }) {
           Branch
           <input value={form.githubBranch} onChange={set("githubBranch")} />
         </label>
-        <label>
-          GitHub token {settings.hasGithubToken && <span className="saved">saved</span>}
-          <input
-            type="password"
-            value={form.githubToken}
-            onChange={set("githubToken")}
-            placeholder={settings.hasGithubToken ? "Leave blank to keep the saved token" : "github_pat_…"}
-          />
-        </label>
+        {secret("GitHub token", "githubToken", settings.hasGithubToken, "github_pat_…")}
         <p className="hint">
           Use a fine-grained token limited to this one repository with <strong>Contents: Read and write</strong>. IT can
           provide it.
-          {settings.hasGithubToken && (
-            <>
-              {" "}
-              <button className="link-button" onClick={() => remove("githubToken")}>
-                Remove saved token
-              </button>
-            </>
-          )}
+          {removeButton("githubToken", settings.hasGithubToken, "Remove saved token")}
         </p>
         <label>
           Widget web address
           <input value={form.widgetUrl} onChange={set("widgetUrl")} />
         </label>
-
-        <h3>Plain-language rewrite (optional)</h3>
-        <label>
-          Anthropic API key {settings.hasAnthropicApiKey && <span className="saved">saved</span>}
-          <input
-            type="password"
-            value={form.anthropicApiKey}
-            onChange={set("anthropicApiKey")}
-            placeholder={settings.hasAnthropicApiKey ? "Leave blank to keep the saved key" : "sk-ant-…"}
-          />
-        </label>
-        <p className="hint">
-          Only needed for the "Rewrite in plain language" button.
-          {settings.hasAnthropicApiKey && (
-            <>
-              {" "}
-              <button className="link-button" onClick={() => remove("anthropicApiKey")}>
-                Remove saved key
-              </button>
-            </>
-          )}
-        </p>
         <p className="hint">Keys are encrypted for your Windows account and stay on this computer.</p>
 
         {error && <p className="error">{error}</p>}
@@ -154,12 +163,64 @@ function Settings({ settings, onClose, onSaved }) {
   );
 }
 
-function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty }) {
+/** What Granicus knows about the recording, and whether a transcript is on file. */
+function SourceInfo({ meeting }) {
+  const s = meeting.source || {};
+  const link = (url, text) => (
+    <button className="link-button" onClick={() => api.openExternal(url)}>
+      {text}
+    </button>
+  );
+  const savedAt =
+    meeting.transcript && meeting.transcript.savedAt
+      ? new Date(meeting.transcript.savedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : "";
+  return (
+    <div className="source">
+      <p>From Granicus</p>
+      <ul>
+        <li>
+          {[s.title || "Recording", s.time, s.durationLabel].filter(Boolean).join(" · ")}
+          {s.clipId ? ` (clip ${s.clipId})` : ""}
+        </li>
+        <li>
+          {s.playerUrl ? link(s.playerUrl, "Watch the video") : "No video link"}
+          {" · "}
+          {s.agendaUrl ? link(s.agendaUrl, "Posted agenda") : "No agenda posted"}
+          {s.minutesUrl && (
+            <>
+              {" · "}
+              {link(s.minutesUrl, "Official minutes")}
+            </>
+          )}
+        </li>
+        <li>
+          {meeting.transcript ? (
+            <>
+              Transcript on file{savedAt ? ` (saved ${savedAt})` : ""}.{" "}
+              <button className="link-button" onClick={() => api.openTranscript(meeting.id)}>
+                Open transcript
+              </button>
+            </>
+          ) : (
+            "No transcript yet. One is saved the first time a summary is written, and reused after that."
+          )}
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty, progress }) {
   const [fields, setFields] = useState(() => fieldsOf(meeting.draft));
   const [beforeRewrite, setBeforeRewrite] = useState(null);
+  const [retranscribe, setRetranscribe] = useState(false);
+  const [job, setJob] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const saved = useMemo(() => fieldsOf(meeting.draft), [meeting.draft]);
   const dirty = JSON.stringify(fields) !== JSON.stringify(saved);
   const draft = { ...meeting.draft, ...fields };
+  const needsSummary = !hasSummary(fields);
   const set = (key) => (e) => {
     const value = e.target.value;
     setFields((f) => ({ ...f, [key]: value }));
@@ -206,8 +267,8 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty }) {
   }
 
   async function setStatus(status) {
-    // Approving checks the saved overview, so save first. Moving away from
-    // Approved changes the status first, so an empty overview can still be saved.
+    // Approving checks the saved overview and date, so save first. Moving away
+    // from Approved changes the status first, so an empty overview can still be saved.
     if (status === "approved" && dirty && !(await persist())) return;
     const result = await api.setStatus(meeting.id, status);
     if (!result.ok) return setNotice({ kind: "error", text: result.error });
@@ -222,25 +283,46 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty }) {
     setNotice({ kind: "ok", text: done[status] });
   }
 
-  async function rewrite() {
+  async function summarize() {
+    if (meeting.flags.some((f) => f.code === "low-content")) {
+      if (!window.confirm("This looks like a test or an empty recording.\n\nWrite a summary anyway?")) return;
+    }
     setBusy(true);
-    const result = await api.rewrite(meeting.id, draft);
+    setJob(true);
+    setCancelling(false);
+    setNotice(null);
+    const result = await api.summarize(meeting.id, draft, { retranscribe });
     setBusy(false);
-    if (!result.ok) return setNotice({ kind: "error", text: result.error, settings: result.needsSettings });
+    setJob(false);
+    setCancelling(false);
+    setRetranscribe(false);
+    // The transcript on file may have changed even when the job stopped part way.
+    onState(result.state || (await api.getState()));
+    if (!result.ok) {
+      if (result.cancelled) return setNotice({ kind: "ok", text: "Cancelled." });
+      return setNotice({ kind: "error", text: result.error, settings: result.needsSettings });
+    }
     // The fields are locked while Claude works, so `fields` is still current here.
-    setBeforeRewrite(fields);
+    if (!needsSummary) setBeforeRewrite(fields);
     setFields({ ...fields, overview: result.suggestion.overview, details: result.suggestion.details });
     setNotice({
       kind: "ok",
-      text: "Claude's suggestion is in the overview and details. Check it against the original, edit as needed, then save.",
+      text:
+        "Claude's summary is in the overview and full summary. Check it against the video and agenda, edit as needed, then save or approve." +
+        (result.agendaUsed ? "" : " Granicus had no posted agenda, so item numbers and amounts come from the recording alone."),
     });
+  }
+
+  async function cancel() {
+    setCancelling(true);
+    await api.cancel();
   }
 
   return (
     <section className="editor" aria-label="Edit summary">
       <header className="editor-head">
         <div>
-          <h2>{formatDate(meeting.draft.date)}</h2>
+          <h2>{formatDate(meeting.draft.date) || "Date needed"}</h2>
           <p className="muted">{meeting.source.title || meeting.draft.title}</p>
         </div>
         <div className="head-right">
@@ -281,8 +363,30 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty }) {
         </div>
       )}
 
+      {needsSummary && !job && (
+        <p className="callout">
+          No summary yet. Click <strong>Write summary with Claude</strong> below. The first time takes about 5 to 15
+          minutes: the app downloads the recording from Granicus, transcribes it, then writes the summary. Leave the
+          window open.
+        </p>
+      )}
+
+      {job && (
+        <div className="working" role="status">
+          <span className="spinner" aria-hidden="true" />
+          <span className="text">{cancelling ? "Cancelling…" : progress || "Starting…"}</span>
+          <button onClick={cancel} disabled={cancelling}>
+            Cancel
+          </button>
+        </div>
+      )}
+
       <div className="editor-grid">
         <fieldset className="fields" disabled={busy}>
+          <label>
+            Meeting date
+            <input type="date" value={fields.date} onChange={set("date")} />
+          </label>
           <label>
             Meeting type
             <input value={fields.title} onChange={set("title")} />
@@ -305,12 +409,7 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty }) {
             <input value={fields.recordingUrl} onChange={set("recordingUrl")} placeholder="https://…" />
           </label>
 
-          {meeting.source.summary && (
-            <details className="original">
-              <summary>Original OpenPublica summary</summary>
-              <pre>{meeting.source.summary}</pre>
-            </details>
-          )}
+          <SourceInfo meeting={meeting} />
         </fieldset>
 
         <div className="preview">
@@ -320,9 +419,20 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty }) {
       </div>
 
       <footer className="editor-actions">
-        <button onClick={rewrite} disabled={busy}>
-          Rewrite in plain language with Claude
+        <button className={needsSummary ? "primary" : ""} onClick={summarize} disabled={busy}>
+          {needsSummary ? "Write summary with Claude" : "Rewrite with Claude"}
         </button>
+        {meeting.transcript && (
+          <label className="inline">
+            <input
+              type="checkbox"
+              checked={retranscribe}
+              onChange={(e) => setRetranscribe(e.target.checked)}
+              disabled={busy}
+            />
+            Transcribe again
+          </label>
+        )}
         {beforeRewrite && (
           <button
             onClick={() => {
@@ -348,7 +458,7 @@ function Editor({ meeting, onState, setNotice, busy, setBusy, onDirty }) {
           </button>
         )}
         {(meeting.status !== "approved" || dirty) && (
-          <button className="primary" onClick={() => setStatus("approved")} disabled={busy}>
+          <button className={needsSummary ? "" : "primary"} onClick={() => setStatus("approved")} disabled={busy}>
             {meeting.status === "approved" ? "Save and keep approved" : "Approve"}
           </button>
         )}
@@ -380,7 +490,13 @@ export default function App() {
   const byTab = (status) => state.meetings.filter((m) => m.status === status);
   const list = byTab(tab);
   const selected = state.meetings.find((m) => m.id === selectedId) || null;
-  const canPublish = state.settings.hasGithubToken && state.pendingCount > 0 && !busy;
+  const settings = state.settings;
+  const missing = [
+    !settings.hasAnthropicApiKey && "the Anthropic API key",
+    !settings.hasDeepgramApiKey && "the Deepgram API key",
+    !settings.hasGithubToken && "the GitHub token",
+  ].filter(Boolean);
+  const canPublish = settings.hasGithubToken && state.pendingCount > 0 && !busy;
 
   async function refresh() {
     setBusy(true);
@@ -392,13 +508,15 @@ export default function App() {
     if (result.publishError) return setNotice({ kind: "error", text: result.publishError, settings: true });
     setNotice({
       kind: "ok",
-      text: result.added ? `Loaded ${result.added} new meeting${result.added === 1 ? "" : "s"}.` : "No new meetings.",
+      text: result.added
+        ? `Loaded ${result.added} new recording${result.added === 1 ? "" : "s"} from Granicus.`
+        : "No new recordings on Granicus.",
     });
   }
 
   async function publish() {
     const changes = state.meetings.filter((m) => m.pending);
-    const lines = changes.map((m) => `• ${formatDate(m.draft.date, "short")}: ${PENDING_LABELS[m.pending]}`);
+    const lines = changes.map((m) => `• ${shortDate(m.draft.date)}: ${PENDING_LABELS[m.pending]}`);
     if (!window.confirm(`Publish these changes to the City website?\n\n${lines.join("\n")}`)) return;
     setBusy(true);
     const result = await api.publish();
@@ -408,7 +526,7 @@ export default function App() {
     setNotice({
       kind: "ok",
       text: "Published. The website updates within a few minutes.",
-      link: state.settings.widgetUrl,
+      link: settings.widgetUrl,
     });
   }
 
@@ -437,11 +555,11 @@ export default function App() {
         <button onClick={() => setShowSettings(true)}>Settings</button>
       </header>
 
-      {!state.settings.hasGithubToken && (
+      {missing.length > 0 && (
         <p className="banner">
-          Publishing isn't set up on this computer yet.{" "}
+          Setup isn't finished on this computer. Add {missing.join(", ")} in Settings.{" "}
           <button className="link-button" onClick={() => setShowSettings(true)}>
-            Add the GitHub token in Settings
+            Open Settings
           </button>
         </p>
       )}
@@ -479,7 +597,7 @@ export default function App() {
           {list.length === 0 && (
             <p className="empty">
               {state.meetings.length === 0
-                ? "Click Check for new meetings to load meetings from OpenPublica."
+                ? "Click Check for new meetings to load recordings from Granicus."
                 : "Nothing here."}
             </p>
           )}
@@ -487,10 +605,11 @@ export default function App() {
             {list.map((m) => (
               <li key={m.id}>
                 <button className={m.id === selectedId ? "meeting active" : "meeting"} onClick={() => select(m.id)}>
-                  <span className="meeting-date">{formatDate(m.draft.date, "short")}</span>
+                  <span className="meeting-date">{shortDate(m.draft.date)}</span>
                   <span className="meeting-title">{m.source.title || m.draft.title}</span>
                   <span className="meeting-badges">
                     {m.conflict && <span className="badge badge-conflict">Choose a version</span>}
+                    {m.status === "review" && !m.draft.overview && <span className="badge badge-muted">No summary yet</span>}
                     {m.flags.length > 0 && !m.autoHidden && <span className="badge badge-warn">Check</span>}
                     {m.pending && <span className="badge badge-pending">{PENDING_LABELS[m.pending]}</span>}
                   </span>
@@ -509,6 +628,7 @@ export default function App() {
             busy={busy}
             setBusy={setBusy}
             onDirty={onDirty}
+            progress={progress}
           />
         ) : (
           <section className="editor editor-empty">
@@ -519,7 +639,7 @@ export default function App() {
 
       {showSettings && (
         <Settings
-          settings={state.settings}
+          settings={settings}
           onClose={() => setShowSettings(false)}
           onSaved={(next, stayOpen) => {
             setState(next);

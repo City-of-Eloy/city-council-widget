@@ -1,0 +1,873 @@
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-52NZLYVR32"></script>
+
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-52NZLYVR32', { 'request_origin':'external' });
+</script>
+<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<title>City Council Meeting</title>
+																		
+			
+
+			<style>
+				/*	How to use the Grid:	
+					The grid is a 12-column fluid grid with a max width of whatever 
+					.container max-width is set to, that shrinks with the browser/device 
+					at smaller sizes. The max width can be changed by simply changing
+					the max-width value on .container below, and all columns will resize 
+					accordingly.
+
+					Note: There are also media queries which can be adjusted to make the grid change at certain 
+					screen sizes. 
+						On smaller screen sizes you would adjust the width value of the .container
+						And on larger screens you would adjust the max-width value of the .container
+						Both of the adjustments in above are made inside the media queries
+					
+					-.container is main centered wrapper
+					-Columns should be the immediate child of a .row
+					-Just use a number and class 'column' or 'columns', e.g :
+						<div class="container">
+							<div class="row">
+								<div class="two columns">Two</div>
+						   	<div class="ten columns">Ten</div>
+					   	</div>
+				   	</div>
+
+					Note: columns can be nested, but it's not recommended since grid has %-based gutters, 
+					meaning a nested grid results in variable with gutters (which can end up 
+					being *really* small on certain browser/device sizes)
+				*/
+				.column,
+				.columns,
+				.container {
+					width: 100%;
+					box-sizing: border-box
+				}
+
+				.column,
+				.columns,
+				.container,
+				.u-full-width,
+				.u-max-full-width {
+					box-sizing: border-box
+				}
+				.container {
+					position: relative;
+					max-width: 960px;
+					margin: 0 auto;
+					padding: 0 1em
+				}
+
+				.column,
+				.columns {
+					float: left
+				}
+				@media only screen and (min-width: 400px) {
+					.container {
+						width: 95%;
+						padding: 0
+					}
+				}
+				@media only screen and (min-width: 550px) {
+					.container {
+						width: 90%
+					}
+					.column,
+					.columns {
+						margin-left: 4%
+					}
+					.column:first-child,
+					.columns:first-child {
+						margin-left: 0
+					}
+					.one.column,
+					.one.columns {
+						width: 4.66666666667%
+					}
+					.two.columns {
+						width: 13.3333333333%
+					}
+					.three.columns {
+						width: 22%
+					}
+					.four.columns {
+						width: 30.6666666667%
+					}
+					.five.columns {
+						width: 39.3333333333%
+					}
+					.six.columns {
+						width: 48%
+					}
+					.seven.columns {
+						width: 56.6666666667%
+					}
+					.eight.columns {
+						width: 65.3333333333%
+					}
+					.nine.columns {
+						width: 74%
+					}
+					.ten.columns {
+						width: 82.6666666667%
+					}
+					.eleven.columns {
+						width: 91.3333333333%
+					}
+					.twelve.columns {
+						width: 100%;
+						margin-left: 0
+					}
+					.one-third.column {
+						width: 30.6666666667%
+					}
+					.two-thirds.column {
+						width: 65.3333333333%
+					}
+					.one-half.column {
+						width: 48%
+					}
+					.offset-by-one.column,
+					.offset-by-one.columns {
+						margin-left: 8.66666666667%
+					}
+					.offset-by-two.column,
+					.offset-by-two.columns {
+						margin-left: 17.3333333333%
+					}
+					.offset-by-three.column,
+					.offset-by-three.columns {
+						margin-left: 26%
+					}
+					.offset-by-four.column,
+					.offset-by-four.columns {
+						margin-left: 34.6666666667%
+					}
+					.offset-by-five.column,
+					.offset-by-five.columns {
+						margin-left: 43.3333333333%
+					}
+					.offset-by-six.column,
+					.offset-by-six.columns {
+						margin-left: 52%
+					}
+					.offset-by-seven.column,
+					.offset-by-seven.columns {
+						margin-left: 60.6666666667%
+					}
+					.offset-by-eight.column,
+					.offset-by-eight.columns {
+						margin-left: 69.3333333333%
+					}
+					.offset-by-nine.column,
+					.offset-by-nine.columns {
+						margin-left: 78%
+					}
+					.offset-by-ten.column,
+					.offset-by-ten.columns {
+						margin-left: 86.6666666667%
+					}
+					.offset-by-eleven.column,
+					.offset-by-eleven.columns {
+						margin-left: 95.3333333333%
+					}
+					.offset-by-one-third.column,
+					.offset-by-one-third.columns {
+						margin-left: 34.6666666667%
+					}
+					.offset-by-two-thirds.column,
+					.offset-by-two-thirds.columns {
+						margin-left: 69.3333333333%
+					}
+					.offset-by-one-half.column,
+					.offset-by-one-half.columns {
+						margin-left: 52%
+					}
+				}
+				@media only screen and (min-width: 1200px) {
+					.container {
+						max-width: 1152px
+					}
+				}
+
+				.u-full-width {
+					width: 100%
+				}
+				.u-max-full-width {
+					max-width: 100%
+				}
+				.u-pull-right {
+					float: right
+				}
+				.u-pull-left {
+					float: left
+				}
+				.container:after,
+				.row:after,
+				.u-cf {
+					content: "";
+					display: table;
+					clear: both
+				}
+
+			body{ 
+				margin-top: .5em; 
+				margin-bottom: .5em; 
+				margin-right: .5em ; 
+				margin-left: .5em;
+				text-align: justify;
+				font-family: Arial, "Arial", Helvetica, sans-serif;
+				font-size: 16px;
+			}
+			@media print {
+				body {
+					margin-top: .5in; 
+					margin-bottom: .5in; 
+					margin-right: .5in ; 
+					margin-left: .5in;
+				}
+			}
+			
+			table{
+				text-align: justify;
+				border-spacing: 0;
+				padding: 0;
+				font-size: inherit;
+			}
+			
+			tr {
+				/* Fix for IE issue where if near bottom of printed page, number prints on current page and 
+					item prints on the next page*/
+				orphans: 0;
+			}			
+
+			td {
+				text-align: justify;
+				vertical-align:top;
+			} 
+			.numberspace {
+				width: 30px;
+				vertical-align: top;
+				text-align: left;
+			}
+
+			/* Prevents logo resizing on print */
+			img {
+				max-width: 100%;
+				height: auto;
+			}
+
+			.underlined {
+				text-decoration: underline;
+			}
+			@page {
+				/* Fix for IE issue where if near bottom of printed page, number prints on current page and 
+					item prints on the next page*/
+				orphans: 0;
+			}	
+			</style> 
+			 
+			
+		</head>
+		<body>
+			<div class="container">
+
+								<div class="row">
+				
+					<div class="twelve columns">
+					<div style = "text-align:center;">
+							<img src="//webcontent.granicusops.com/content/Eloyar/images/eloylogo.png" alt="Eloy, AZ" style="max-width: 150px;" />
+						</div>
+						<div style="text-align: center; font-weight: bold;">
+					
+							<br/>
+						
+							<div>PUBLIC NOTICE<br/>City Council Meeting<br/>Meets<br/> </div>							Monday, October 12, 2026 <br/> 
+																					 
+																																6:00  
+														p.m.							<br/>
+							ELOY CITY COUNCIL CHAMBERS <br/>  							595 North C Street <br/>
+							Eloy, Arizona 85131
+							<br/>
+													<br/>
+							<br/>
+						</div>
+					</div>
+	
+
+
+				</div>
+												<div class="row">
+					<div class="twelve columns">
+												<style>blockquote { margin-left: 30px; margin-right: 0px; margin-top: 0px; margin-bottom: 0px; }@media print { a { color: black; } }</style>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>I.</strong></td>
+											<td><strong><a name="agenda13586" class="Agenda Agenda" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13586" onclick="">Call to Order</a></strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>I.</strong></td>
+											<td><strong><a name="agenda13587" class="Agenda Agenda0" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13587" onclick="">Call to Order</a></strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>II.</strong></td>
+											<td><strong><a name="agenda13588" class="Agenda Agenda0" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13588" onclick="">Roll Call</a></strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>III.</strong></td>
+											<td><strong><a name="agenda13589" class="Agenda Agenda0" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13589" onclick="">Moment of Silence</a></strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>III.</strong></td>
+											<td><strong><a name="agenda13590" class="Agenda Agenda0" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13590" onclick="">Moment of Silence</a></strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>IV.</strong></td>
+											<td><strong><a name="agenda13591" class="Agenda Agenda0" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13591" onclick="">Pledge of Allegiance</a></strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>IV.</strong></td>
+											<td><strong><a name="agenda13592" class="Agenda Agenda0" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13592" onclick="">Pledge of Allegiance</a></strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>V.</strong></td>
+											<td><strong><a name="agenda13593" class="Agenda Agenda0" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13593" onclick="">Public Appearances&nbsp;  <br />
+&nbsp; &nbsp; &nbsp; Those wishing to ADDRESS THE CITY COUNCIL may do so by signing in on a form&nbsp; <br />
+&nbsp; &nbsp; &nbsp; provided by the City Clerk, identifying the topic(s) or agenda item(s). ACTION taken as a result&nbsp; <br />
+&nbsp; &nbsp; &nbsp; of public comment regarding non agenda items will be limited to directing staff to study the&nbsp; <br />
+&nbsp; &nbsp; &nbsp; matter or rescheduling the matter for further consideration and decision at a later date.&nbsp; <br />
+&nbsp; &nbsp; &nbsp; SPEAKERS SHALL BE LIMITED TO THREE (3) MINUTES.</a></strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;">							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">A.</td>
+											<td>Scheduled
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;">							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">1.</td>
+											<td><a name="agenda13596" class="Agenda Agenda2" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13596" onclick="">Red Ribbon Week Proclamation</a>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">B.</td>
+											<td>Unscheduled
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>V.</strong></td>
+											<td><strong><a name="agenda13594" class="Agenda Agenda0" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13594" onclick="">Public Appearances&nbsp;  <br />
+&nbsp; &nbsp; &nbsp; Those wishing to ADDRESS THE CITY COUNCIL may do so by signing in on a form&nbsp; <br />
+&nbsp; &nbsp; &nbsp; provided by the City Clerk, identifying the topic(s) or agenda item(s). ACTION taken as a result&nbsp; <br />
+&nbsp; &nbsp; &nbsp; of public comment regarding non agenda items will be limited to directing staff to study the&nbsp; <br />
+&nbsp; &nbsp; &nbsp; matter or rescheduling the matter for further consideration and decision at a later date.&nbsp; <br />
+&nbsp; &nbsp; &nbsp; SPEAKERS SHALL BE LIMITED TO THREE (3) MINUTES.</a></strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>VI.</strong></td>
+											<td><strong>Reports and Announcements</strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;">							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">A.</td>
+											<td><a name="agenda13599" class="Agenda Agenda1" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13599" onclick="">Mayor&rsquo;s Announcements</a>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">B.</td>
+											<td><a name="agenda13600" class="Agenda Agenda1" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13600" onclick="">Council Members&rsquo; Announcements</a>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">C.</td>
+											<td><a name="agenda13601" class="Agenda Agenda1" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13601" onclick="">City Manager&rsquo;s Announcements</a>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>VII.</strong></td>
+											<td><strong><a name="agenda13602" class="Agenda Agenda0" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13602" onclick="">Consent Agenda</a></strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;">							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">A.</td>
+											<td>Approval of Minutes — September 14, 2026,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Michelle Hall&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Regular Council Meeting
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">B.</td>
+											<td>Consideration and Acceptance of the Federal Fiscal&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Sergio Banales&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Year (FFY) 2026 High Intensity Drug Trafficking&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Area (HIDTA) Grant #HID2626G0731-2918 for the&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Continued Funding of a Sworn Police Officer&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Assigned to the Pinal County HIDTA Narcotics&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Task Force (PCNTF).
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">C.</td>
+											<td>Authorization to enter into an Intergovernmental&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Chief Sergio Banales&nbsp;  <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Agreement (IGA) with Pinal County for the purpose&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; of continued participation in the Multi-Agency&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Special Weapons and Tactics (SWAT) team.
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">D.</td>
+											<td>Authorization of Professional Consulting Services&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Refugio Gallegos&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; with Coffman Associates, a Pape-Dawson&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Company, for the Eloy Municipal Airport Leasing&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Policy, Minimum Standards Review and Update,&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; and Rates & Fees Analysis in an Amount Not to&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Exceed $85,000
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">E.</td>
+											<td>Authorization to Utilize 1Government Procurement&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Refugio Gallegos&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Alliance (1GPA) Contract No. 22-15P-04 with&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Sunland Asphalt & Construction, LLC for FY 2026- <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 2027 Pavement Preservation Projects in an Amount&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Not to Exceed $775,000
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">F.</td>
+											<td>Authorization to Utilize City of El Mirage Job Order&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Refugio Gallegos&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Contract No. PW24-JOC01 with Danson&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Construction, LLC for the Construction of Two&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Shade Structures at the Public Works Fleet Shop in&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; an Amount Not to Exceed $150,000
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">G.</td>
+											<td>Consideration and possible approval of Case No.&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Dan Symer, AICP&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; FP2026-008: Perez Replat, a request for approval of&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; a 1-lot Final Plat encompassing approximately
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;">							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">0.2303</td>
+											<td>acres, located at 305 and 307 West Phoenix&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Avenue.
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">H.</td>
+											<td>Recommendation to the Arizona Department of&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Michelle Hall&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Liquor Licenses and Control (ADLLC) for issuance&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; of a Special Event Liquor License for Eloy Chamber&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; of Commerce for the Eloy Glow Saturday,&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; November 7, 2026, at Eloy Jr High School.
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">I.</td>
+											<td>Recommendation to the Arizona Department of&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Michelle Hall&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Liquor Licenses and Control (ADLLC) for issuance&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; of a Special Event License to the Eloy Chamber of&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Commerce for a Concert in the Park-Two Steppin&rsquo;&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Down Main Friday, November 20, 2026, at Eloy&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Main Street Park.
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">J.</td>
+											<td>Recommendation to the Arizona Department of&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Michelle Hall&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Liquor Licenses and Control (ADLLC) for issuance&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; of a Special Event License to the Eloy Chamber of&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Commerce for a Concert in the Park — Soldie&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Saturday, February 27, 2027, at Eloy Main Street&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Park.
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>VIII.</strong></td>
+											<td><strong>Business: Possible Discussion and/or Action on the Following:</strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;">							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">A.</td>
+											<td>Conduct a public hearing and consider adopting&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Dan Symer, AICP&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Resolution No. 26-1679, finding that the applicable&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; criteria have been met, and approve a two-year time&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; extension (Case No. CUP2024-002.E1) to the&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; previously approved Conditional Use Permit (Case&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; No.: CUP2024-002) to allow a Solar, Utility Scale&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Generation and Battery Energy Storage System&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Facility, submitted by Sean B. Lake of Pew & Lake,&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; PLC on behalf of NextEra Energy Resources, LLC&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; (“NextEra”) and various property owners, on&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; irregularly shaped property containing&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; approximately 2,237 acres.
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">B.</td>
+											<td>Discussion and Consideration of Community&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Mackenzie Letcher&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Outreach Funding Requests for Fiscal Year 2026- <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 2027
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace">C.</td>
+											<td><a name="agenda13617" class="Agenda Agenda1" href="https://eloyaz.granicus.com/MediaPlayer.php?view_id=1&clip_id=288&meta_id=13617" onclick="">Authorize the City to execute Inmate Work Contract&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  Mackenzie Letcher&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; No. IWC 27-002-31 with the Arizona Department of&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Corrections, Rehabilitation and Reentry (ADCRR)&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; and ASP-Florence/West to provide inmate work&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; crews in support of Public Works and Community&nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Development operations.</a>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>IX.</strong></td>
+											<td><strong>Executive Session&nbsp; <br />
+&nbsp; &nbsp; &nbsp; Possible executive session for discussion/consultation for legal advice with the city&nbsp; <br />
+&nbsp; &nbsp; &nbsp; attorney and/or city staff concerning any of the agenda items, pursuant to A.R.S. §38- <br />
+&nbsp; &nbsp; &nbsp; 431.03 (A) (3) and (4).</strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote>							<table>
+								<tbody>
+									<tr>
+
+																					<td class = "numberspace"><strong>X.</strong></td>
+											<td><strong>Adjournment</strong>
+										
+																				
+																														</td>
+									</tr>
+								</tbody>
+							</table>
+							<br/>
+
+												<blockquote dir="ltr" style="MARGIN-RIGHT=0px;"></blockquote> 
+						
+					</div>
+				</div> <!-- Close Agenda content row -->
+												<div class="row">
+					<div class="twelve columns">
+											</div>
+
+					 						<div>	
+						<div><hr style="border: none; height: 2px; width:50%; align:left; margin-left:0; color: #000000; background-color: #000000;" /></div>
+						<div> Michelle Hall,City Clerk
+						<div>	
+						</div>
+					
+					<br/>
+					<br/>
+					<div>INDIVIDUALS WITH  SPECIAL  ACCESSIBILITY  NEEDS  MAY  CONTACT MICHELLE HALL, ADA COORDINATOR FOR THE CITY OF  ELOY  AT    520-466-9201  OR    520-466-7455  (TDD).   IF POSSIBLE, SUCH  REQUESTS SHOULD  BE  MADE  72   HOURS  IN   ADVANCE.  ONE  OR    MORE MEMBERS OF    THE COUNCIL AND/OR STAFF  MAY PARTICIPATE  BY    TELEPHONIC OR    VIDEO MEANS.</div>
+	
+							</div> <!-- End Footer .row -->
+				
+			</div> <!-- Close .container -->
+
+		</body>
+	</html>

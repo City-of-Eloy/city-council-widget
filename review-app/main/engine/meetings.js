@@ -1,126 +1,125 @@
-/** Turn OpenPublica meetings into widget drafts, and flag the ones a reviewer
- *  should look at closely (tests, empty recordings, duplicate dates).
+/** Turn Granicus recordings into widget drafts, and flag the ones a reviewer
+ *  should look at closely (tests, short or duplicate recordings, other boards).
  */
 "use strict";
 
-const LOW_CONTENT_MARKERS = [
-  "no substantive content",
-  "system test",
-  "nonsensical",
-  "no actionable outcomes",
-  "troubleshooting",
-  "no content available",
-  "no agenda, minutes, or transcript",
-];
+const COUNCIL_KINDS = new Set(["council", "special", "work-session"]);
+const SHORT_RECORDING_SEC = 10 * 60;
+const ID_PREFIX = "granicus-";
 
-const INCOMPLETE_RECORDING = /no (minutes or )?meaningful transcript|transcript (was|is) (not available|unavailable)|(single|only) (nonsensical|unclear) remark|no substantive (public comments|discussion)/i;
-
-const SHORT_RECORDING_MINUTES = 10;
-
-function isCouncilMeeting(title) {
-  return /council/i.test(String(title || ""));
+/** Meeting id used in the review state and the published file. */
+function clipKey(clipId) {
+  return `${ID_PREFIX}${clipId}`;
 }
 
-function meetingKind(title) {
-  const t = String(title || "");
-  if (/planning\s*(&|and)\s*zoning/i.test(t)) return "Planning & Zoning Commission Meeting";
-  if (!isCouncilMeeting(t)) return "Public Meeting";
-  if (/special/i.test(t)) return "Special Meeting";
-  if (/work\s*session|study\s*session/i.test(t)) return "Work Session";
-  return "Regular Meeting";
-}
-
-/** Split an OpenPublica summary into the opening paragraph and the rest.
- *  The leading "# Title" heading is dropped; the widget shows the date instead. */
-function splitSummary(markdown) {
-  const text = String(markdown || "")
-    .replace(/\r\n?/g, "\n")
-    .trim()
-    .replace(/^#\s+[^\n]*\n+/, "")
-    .trim();
-  const firstBreak = text.search(/\n\s*\n/);
-  const first = firstBreak === -1 ? text : text.slice(0, firstBreak);
-  if (/^\s*(#|[-*+]\s|\d+[.)]\s)/.test(first)) return { overview: "", details: text };
-  return {
-    overview: first.trim(),
-    details: firstBreak === -1 ? "" : text.slice(firstBreak).trim(),
-  };
-}
-
-/** Granicus download link -> the City's Granicus video player page for the same clip. */
-function recordingPageUrl(sourceUrl) {
+/** Granicus clip number in a video link (MediaPlayer.php?clip_id=N or /player/clip/N), or null. */
+function clipIdFromUrl(url) {
   try {
-    const url = new URL(sourceUrl);
-    const clipId = url.searchParams.get("clip_id");
-    if (!/(^|\.)granicus\.com$/i.test(url.hostname) || !clipId) return "";
-    const viewId = url.searchParams.get("view_id") || "1";
-    return `https://${url.hostname}/MediaPlayer.php?view_id=${encodeURIComponent(viewId)}&clip_id=${encodeURIComponent(clipId)}`;
+    const u = new URL(String(url || ""));
+    if (!/(^|\.)granicus\.com$/i.test(u.hostname)) return null;
+    const q = u.searchParams.get("clip_id");
+    if (q && /^\d+$/.test(q)) return Number(q);
+    const m = u.pathname.match(/\/clip\/(\d+)/);
+    return m ? Number(m[1]) : null;
   } catch {
-    return "";
+    return null;
   }
 }
 
-function httpsOrEmpty(url) {
-  return /^https:\/\//i.test(String(url || "")) ? String(url) : "";
+/** The clip a record is about: from its id, or from its video link for records
+ *  published before the move to Granicus (they had OpenPublica ids). */
+function recordClipId(record) {
+  const m = String((record && record.id) || "").match(/^granicus-(\d+)$/);
+  return m ? Number(m[1]) : clipIdFromUrl(record && record.recordingUrl);
 }
 
-/** A new draft from an OpenPublica meeting (from get_meeting, or a listing entry). */
-function toDraft(meeting) {
-  const summary = meeting.summary || meeting.summary_preview || "";
-  const { overview, details } = splitSummary(summary);
+/** Give a record from before the move to Granicus its clip id, so it matches the listing. */
+function normalizeRecord(record) {
+  const clipId = recordClipId(record);
+  const id = clipId ? clipKey(clipId) : record.id;
+  return id === record.id ? record : { ...record, id };
+}
+
+/** The "Meeting type" shown on the website. */
+function meetingKind(clip) {
+  switch (clip.kind) {
+    case "council":
+      return "Regular Meeting";
+    case "special":
+      return "Special Meeting";
+    case "work-session":
+      return "Work Session";
+    case "pz":
+      return "Planning & Zoning Commission Meeting";
+    case "test":
+      return "Test Recording";
+    default:
+      return "Public Meeting";
+  }
+}
+
+/** What the reviewer sees about the recording; refreshed from the listing each time. */
+function sourceOf(clip) {
   return {
-    id: meeting.meeting_id,
-    date: meeting.date,
-    title: meetingKind(meeting.title),
-    overview,
-    details,
-    durationMinutes: Number(meeting.duration_minutes) || null,
-    // The City's Granicus player when there is one, otherwise OpenPublica's archive copy.
-    recordingUrl: recordingPageUrl(meeting.source_url) || httpsOrEmpty(meeting.video_url),
-    source: {
-      title: String(meeting.title || ""),
-      summary: String(summary),
-      openpublicaUrl: httpsOrEmpty(meeting.openpublica_url),
-    },
+    clipId: clip.clipId,
+    title: String(clip.title || ""),
+    kind: clip.kind,
+    kindLabel: clip.kindLabel,
+    time: clip.time || null,
+    durationSec: clip.durationSec || null,
+    durationLabel: clip.durationLabel || "",
+    playerUrl: clip.playerUrl,
+    agendaUrl: clip.agendaUrl || null,
+    minutesUrl: clip.minutesUrl || null,
   };
 }
 
-function isLowContent(meeting) {
-  const title = String(meeting.title || "").toLowerCase();
-  const summary = String(meeting.summary || meeting.summary_preview || "").toLowerCase();
-  return LOW_CONTENT_MARKERS.some((m) => title.includes(m) || summary.includes(m));
+/** A new draft from a Granicus listing entry. The summary starts empty; Claude or the reviewer writes it. */
+function toDraft(clip) {
+  return {
+    id: clipKey(clip.clipId),
+    date: clip.date || null,
+    title: meetingKind(clip),
+    overview: "",
+    details: "",
+    durationMinutes: clip.durationSec ? Math.round(clip.durationSec / 60) : null,
+    recordingUrl: clip.playerUrl,
+    source: sourceOf(clip),
+  };
 }
 
 /** Reasons a reviewer should take a closer look before approving: [{ code, message }].
- *  Code "low-content" means the meeting is hidden automatically. */
-function reviewFlags(meeting, allMeetings = []) {
+ *  Code "low-content" means the recording is hidden automatically. */
+function reviewFlags(clip, listing = []) {
   const flags = [];
   const add = (code, message) => flags.push({ code, message });
-  const summary = String(meeting.summary || meeting.summary_preview || "");
 
-  if (!isCouncilMeeting(meeting.title)) {
-    add("not-council", "This doesn't look like a City Council meeting (it may be a commission or board).");
-  }
-  if (isLowContent(meeting)) {
+  if (clip.lowContent) {
     add("low-content", "Looks like a test or an empty recording, so it was hidden automatically.");
-  } else if (INCOMPLETE_RECORDING.test(summary)) {
-    add("incomplete", "The summary says the recording was incomplete. Check it against the agenda before approving.");
+  } else {
+    if (!COUNCIL_KINDS.has(clip.kind)) {
+      add("not-council", `This is a ${clip.kindLabel || "non-Council"} recording, not a City Council meeting.`);
+    }
+    if (clip.durationSec && clip.durationSec < SHORT_RECORDING_SEC) {
+      add("short", `The recording is only ${Math.round(clip.durationSec / 60)} minutes long.`);
+    }
+  }
+  if (!clip.date) {
+    add("no-date", "Granicus doesn't show a date for this recording. Enter the meeting date before approving.");
   }
   // Other real recordings of the same date; automatically hidden tests don't count.
-  const sameDay = allMeetings.filter(
-    (m) => m.meeting_id !== meeting.meeting_id && m.date === meeting.date && !isLowContent(m)
-  );
+  const sameDay = listing.filter((m) => m.clipId !== clip.clipId && m.date && m.date === clip.date && !m.lowContent);
   if (sameDay.length) {
     add(
       "same-date",
       `There ${sameDay.length === 1 ? "is another recording" : `are ${sameDay.length} other recordings`} for this date. Publish only the best one.`
     );
   }
-  const minutes = Number(meeting.duration_minutes);
-  if (minutes && minutes < SHORT_RECORDING_MINUTES) {
-    add("short", `The recording is only ${minutes} minutes long.`);
-  }
   return flags;
+}
+
+function httpsOrEmpty(url) {
+  return /^https:\/\//i.test(String(url || "")) ? String(url) : "";
 }
 
 /** The fields the website widget shows. Nothing else is published. */
@@ -142,16 +141,20 @@ function buildPublishedFile(drafts) {
     updated: new Date().toISOString(),
     meetings: drafts
       .map(publishedRecord)
-      .sort((a, b) => String(b.date).localeCompare(String(a.date))),
+      .sort((a, b) => String(b.date || "").localeCompare(String(a.date || ""))),
   };
 }
 
 module.exports = {
+  COUNCIL_KINDS,
+  clipKey,
+  clipIdFromUrl,
+  recordClipId,
+  normalizeRecord,
+  meetingKind,
+  sourceOf,
   toDraft,
   reviewFlags,
   publishedRecord,
   buildPublishedFile,
-  splitSummary,
-  meetingKind,
-  recordingPageUrl,
 };

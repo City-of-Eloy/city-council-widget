@@ -6,11 +6,12 @@
 
 const DATA_PATH = "widget/data/meetings.json";
 const API = "https://api.github.com";
+const { FriendlyError } = require("./errors");
 
-class PublishError extends Error {
+class PublishError extends FriendlyError {
   /** needsToken: the screen should send the reviewer to Settings. */
   constructor(message, { needsToken = false } = {}) {
-    super(message);
+    super(message, { needsKey: needsToken, keyKind: needsToken ? "github" : null });
     this.needsToken = needsToken;
   }
 }

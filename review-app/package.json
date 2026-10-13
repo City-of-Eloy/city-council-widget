@@ -1,8 +1,8 @@
 {
   "name": "eloy-council-review",
   "productName": "Eloy Council Summaries",
-  "version": "1.0.0",
-  "description": "Review City Council meeting summaries before they are published to the City website widget.",
+  "version": "2.0.0",
+  "description": "Review plain-language City Council meeting summaries (Granicus video, Deepgram transcription, Claude) before they are published to the City website widget.",
   "main": "main/main.js",
   "author": "City of Eloy",
   "license": "UNLICENSED",
@@ -11,7 +11,8 @@
     "build:renderer": "vite build",
     "start": "vite build && electron .",
     "dist": "vite build && electron-builder --win",
-    "test": "node smoke-test.js"
+    "test": "node smoke-test.js",
+    "e2e": "node e2e-test.js"
   },
   "build": {
     "appId": "gov.eloy.council-summaries",
@@ -23,6 +24,15 @@
       "main/**",
       "dist-renderer/**",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources",
+        "to": "."
+      }
+    ],
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/**"
     ],
     "win": {
       "target": "nsis"
@@ -37,6 +47,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.132.1",
+    "ffmpeg-static": "^5.3.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -45,5 +56,8 @@
     "electron": "^44.0.0",
     "electron-builder": "^26.15.3",
     "vite": "^8.2.2"
+  },
+  "allowScripts": {
+    "ffmpeg-static@5.3.0": true
   }
 }

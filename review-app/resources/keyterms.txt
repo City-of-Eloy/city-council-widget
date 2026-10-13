@@ -1,0 +1,32 @@
+# Names and places Deepgram should recognise (one per line, # = comment).
+# Update when Council or staff changes. Keep it short: about 50 terms at most.
+Eloy
+Andrew Sutton
+Michelle Tarango
+Sara Curtis
+JoAnne Galindo
+Jose Garcia
+Dan Snyder
+Michael Vodrazka
+Stephen Cooper
+Mackenzie Letcher
+Michelle Hall
+Sergio Banales
+Refugio Gallegos
+Dan Symer
+Councilmember
+Vice Mayor
+Toltec
+Pinal County
+Arizona City
+Casa Grande
+Consent Agenda
+Executive Session
+ADLLC
+CAGRD
+HIDTA
+Councilmember Snyder
+Councilmember Vodrazka
+Councilmember Galindo
+Mayor Sutton
+Vice Mayor Tarango

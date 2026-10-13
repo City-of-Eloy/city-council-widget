@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "request_id": "fixture-0000",
+    "duration": 95.5,
+    "channels": 1,
+    "models": ["nova-3"]
+  },
+  "results": {
+    "channels": [
+      {
+        "alternatives": [
+          {
+            "transcript": "I'll call the meeting to order at 6:02 p.m. Roll call, please. Mayor Sutton. Here. Councilmember Garcia. Here. I'll move to approve the consent agenda. Second. All in favor? Aye. Motion carries.",
+            "confidence": 0.97,
+            "words": [
+              { "word": "i'll", "start": 1.2, "end": 1.4, "confidence": 0.99, "speaker": 0, "punctuated_word": "I'll" },
+              { "word": "here", "start": 9.0, "end": 9.3, "confidence": 0.98, "speaker": 1, "punctuated_word": "Here." },
+              { "word": "move", "start": 61.0, "end": 61.3, "confidence": 0.97, "speaker": 2, "punctuated_word": "move" }
+            ],
+            "paragraphs": {
+              "transcript": "\nSpeaker 0: I'll call the meeting to order at 6:02 p.m. Roll call, please.\n\nSpeaker 1: Mayor Sutton.\n...",
+              "paragraphs": [
+                {
+                  "speaker": 0,
+                  "num_words": 13,
+                  "start": 1.2,
+                  "end": 6.1,
+                  "sentences": [
+                    { "text": "I'll call the meeting to order at 6:02 p.m.", "start": 1.2, "end": 4.0 },
+                    { "text": "Roll call, please.", "start": 4.4, "end": 6.1 }
+                  ]
+                },
+                {
+                  "speaker": 1,
+                  "num_words": 6,
+                  "start": 7.0,
+                  "end": 12.5,
+                  "sentences": [
+                    { "text": "Mayor Sutton.", "start": 7.0, "end": 8.2 },
+                    { "text": "Here.", "start": 9.0, "end": 9.3 },
+                    { "text": "Councilmember Garcia.", "start": 10.5, "end": 11.8 }
+                  ]
+                },
+                {
+                  "speaker": 2,
+                  "num_words": 1,
+                  "start": 12.6,
+                  "end": 12.9,
+                  "sentences": [{ "text": "Here.", "start": 12.6, "end": 12.9 }]
+                },
+                {
+                  "speaker": 2,
+                  "num_words": 7,
+                  "start": 60.8,
+                  "end": 63.4,
+                  "sentences": [{ "text": "I'll move to approve the consent agenda.", "start": 60.8, "end": 63.4 }]
+                },
+                {
+                  "speaker": 3,
+                  "num_words": 1,
+                  "start": 64.0,
+                  "end": 64.4,
+                  "sentences": [{ "text": "Second.", "start": 64.0, "end": 64.4 }]
+                },
+                {
+                  "speaker": 0,
+                  "num_words": 5,
+                  "start": 3665.0,
+                  "end": 3670.0,
+                  "sentences": [
+                    { "text": "All in favor?", "start": 3665.0, "end": 3666.0 },
+                    { "text": "Aye.", "start": 3667.0, "end": 3667.5 },
+                    { "text": "Motion carries.", "start": 3668.5, "end": 3670.0 }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "utterances": [
+      { "id": "u1", "start": 1.2, "end": 6.1, "confidence": 0.98, "channel": 0, "speaker": 0, "transcript": "I'll call the meeting to order at 6:02 p.m. Roll call, please." },
+      { "id": "u2", "start": 7.0, "end": 8.2, "confidence": 0.98, "channel": 0, "speaker": 1, "transcript": "Mayor Sutton." },
+      { "id": "u3", "start": 9.0, "end": 9.3, "confidence": 0.98, "channel": 0, "speaker": 1, "transcript": "Here." },
+      { "id": "u4", "start": 60.8, "end": 63.4, "confidence": 0.97, "channel": 0, "speaker": 2, "transcript": "I'll move to approve the consent agenda." },
+      { "id": "u5", "start": 64.0, "end": 64.4, "confidence": 0.95, "channel": 0, "speaker": 3, "transcript": "Second." }
+    ]
+  }
+}

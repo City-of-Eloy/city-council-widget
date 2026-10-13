@@ -4,15 +4,36 @@ const fs = require("fs");
 const path = require("path");
 const { app, BrowserWindow, ipcMain, shell } = require("electron");
 
-const { OpenPublicaClient, OpenPublicaError } = require("./engine/openpublica");
+const granicus = require("./engine/granicus");
+const { cleanupTemp } = require("./engine/media");
+const transcripts = require("./engine/transcripts");
+const { summarizeClip } = require("./engine/pipeline");
 const { ReviewStore } = require("./engine/review");
-const { PublishError } = require("./engine/github");
-const { rewriteSummary, RewriteError } = require("./engine/rewrite");
+const { FriendlyError, CancelledError, isAbortError } = require("./engine/errors");
 const { loadSettings, saveSettings, publicSettings } = require("./engine/settings");
 
 let mainWindow = null;
 let store = null;
 let busy = false;
+let currentJob = null; // { controller, id } while a summary is being written
+let listingCache = null; // { at, meetings }
+const LISTING_TTL_MS = 10 * 60 * 1000;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Bundled files (keyterms.txt): next to app.asar when packaged, review-app/resources in development. */
+function resourcesDir() {
+  return app.isPackaged ? process.resourcesPath : path.join(__dirname, "..", "resources");
+}
+
+/** Transcripts go to Documents\Eloy Minutes\Transcripts, the folder the City
+ *  Clerk's Eloy Minutes app uses, so a meeting is transcribed (and paid for) once. */
+function outputDir() {
+  return path.join(app.getPath("documents"), "Eloy Minutes");
+}
+
+function tempDir() {
+  return path.join(app.getPath("temp"), "eloy-minutes");
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -46,6 +67,13 @@ function createWindow() {
   if (process.env.ELOY_SCREENSHOT) {
     mainWindow.webContents.once("did-finish-load", async () => {
       await new Promise((r) => setTimeout(r, Number(process.env.ELOY_SCREENSHOT_DELAY) || 2500));
+      // ELOY_SCREENSHOT_CLICK=<css selector> clicks that element first (for example the first meeting).
+      if (process.env.ELOY_SCREENSHOT_CLICK) {
+        await mainWindow.webContents.executeJavaScript(
+          `document.querySelector(${JSON.stringify(process.env.ELOY_SCREENSHOT_CLICK)})?.click()`
+        );
+        await new Promise((r) => setTimeout(r, 1000));
+      }
       const image = await mainWindow.webContents.capturePage();
       fs.writeFileSync(process.env.ELOY_SCREENSHOT, image.toPNG());
       app.quit();
@@ -54,31 +82,61 @@ function createWindow() {
 }
 
 function progress(message) {
-  if (mainWindow) mainWindow.webContents.send("progress", message);
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send("progress", message);
 }
 
-/** Run a long action once at a time, and turn known errors into messages for the screen. */
+async function getListing({ force = false, signal } = {}) {
+  if (!force && listingCache && Date.now() - listingCache.at < LISTING_TTL_MS) return listingCache.meetings;
+  const meetings = await granicus.listMeetings({ signal });
+  listingCache = { at: Date.now(), meetings };
+  return meetings;
+}
+
+/** "Transcript on file" details for the editor, or null. */
+function transcriptInfo(index, clipId) {
+  const file = clipId ? index.get(clipId) : null;
+  if (!file) return null;
+  let savedAt = null;
+  try {
+    savedAt = new Date(fs.statSync(file).mtimeMs).toISOString();
+  } catch {
+    /* removed between listing and stat */
+  }
+  return { name: path.basename(file), savedAt };
+}
+
+function snapshot() {
+  const view = store.view();
+  const index = transcripts.indexTranscripts(path.join(outputDir(), "Transcripts"));
+  return {
+    ...view,
+    meetings: view.meetings.map((m) => ({ ...m, transcript: transcriptInfo(index, m.clipId) })),
+    settings: publicSettings(),
+    job: currentJob ? { id: currentJob.id } : null,
+  };
+}
+
+/** Turn an error into what the screen shows. */
+function failure(e) {
+  if (e instanceof FriendlyError) {
+    return { ok: false, error: e.message, cancelled: e.cancelled, needsSettings: e.needsKey, keyKind: e.keyKind };
+  }
+  console.error(e);
+  return { ok: false, error: e.message || String(e) };
+}
+
+/** Run a long action once at a time. */
 async function run(action) {
   if (busy) return { ok: false, error: "Another action is still running. Wait for it to finish." };
   busy = true;
   try {
     return { ok: true, ...(await action()) };
   } catch (e) {
-    const known = e instanceof OpenPublicaError || e instanceof PublishError || e instanceof RewriteError;
-    if (!known) console.error(e);
-    return {
-      ok: false,
-      error: e instanceof OpenPublicaError ? `OpenPublica: ${e.message}` : e.message || String(e),
-      needsSettings: Boolean(e.needsToken || e.needsKey),
-    };
+    return failure(e);
   } finally {
     busy = false;
     progress("");
   }
-}
-
-function snapshot() {
-  return { ...store.view(), settings: publicSettings() };
 }
 
 ipcMain.handle("state:get", () => snapshot());
@@ -86,7 +144,7 @@ ipcMain.handle("state:get", () => snapshot());
 ipcMain.handle("meetings:refresh", () =>
   run(async () => {
     const result = await store.refresh({
-      openPublica: new OpenPublicaClient(),
+      granicus: { listMeetings: () => getListing({ force: true }) },
       settings: loadSettings(),
       onProgress: progress,
     });
@@ -111,18 +169,68 @@ ipcMain.handle("meeting:save", (_e, id, fields) => edit(() => store.update(id, f
 ipcMain.handle("meeting:status", (_e, id, status) => edit(() => store.setStatus(id, status)));
 ipcMain.handle("meeting:resolve", (_e, id, choice) => edit(() => store.resolveConflict(id, choice)));
 
-ipcMain.handle("meeting:rewrite", (_e, id, draft) =>
+/** Write (or rewrite) one meeting's summary: Granicus audio -> transcript -> Claude. */
+ipcMain.handle("meeting:summarize", (_e, id, draft, options) =>
   run(async () => {
-    progress("Loading the meeting transcript…");
-    const meeting = await new OpenPublicaClient().getMeeting(id, true);
-    progress("Claude is rewriting the summary. This can take a minute or two…");
-    const suggestion = await rewriteSummary(meeting, draft, {
-      apiKey: loadSettings().anthropicApiKey,
-      onProgress: progress,
-    });
-    return { suggestion };
+    const meeting = store.view().meetings.find((m) => m.id === id);
+    if (!meeting) throw new FriendlyError("That meeting is no longer in the list. Click Check for new meetings.");
+    if (!meeting.clipId) throw new FriendlyError("This meeting has no Granicus recording to summarize.");
+
+    const controller = new AbortController();
+    currentJob = { controller, id };
+    try {
+      progress("Looking up the recording on Granicus…");
+      let listing = null;
+      try {
+        listing = await getListing({ signal: controller.signal });
+      } catch {
+        listing = null; // the player page alone is enough
+      }
+      const clip = await granicus.resolveClip(meeting.clipId, { listing, signal: controller.signal });
+      const fields = draft && typeof draft === "object" ? draft : meeting.draft;
+      if (DATE.test(String(fields.date || ""))) clip.date = fields.date; // the reviewer's date wins
+
+      const settings = loadSettings();
+      const result = await summarizeClip({
+        clip,
+        draft: fields,
+        retranscribe: Boolean(options && options.retranscribe),
+        keys: { anthropic: settings.anthropicApiKey, deepgram: settings.deepgramApiKey },
+        dirs: { output: outputDir(), temp: tempDir(), reference: resourcesDir() },
+        onProgress: (p) => progress(p.text),
+        signal: controller.signal,
+      });
+      currentJob = null;
+      return {
+        suggestion: { overview: result.overview, details: result.details },
+        transcriptReused: result.transcriptReused,
+        agendaUsed: result.agendaUsed,
+        state: snapshot(),
+      };
+    } catch (e) {
+      // A cancel can surface as a raw AbortError from a body read; report it as a cancel.
+      if (controller.signal.aborted || isAbortError(e)) throw new CancelledError();
+      throw e;
+    } finally {
+      currentJob = null;
+    }
   })
 );
+
+ipcMain.handle("meeting:cancel", () => {
+  if (!currentJob) return { ok: false };
+  currentJob.controller.abort();
+  return { ok: true };
+});
+
+ipcMain.handle("transcript:open", async (_e, id) => {
+  const meeting = store.view().meetings.find((m) => m.id === id);
+  const dir = path.join(outputDir(), "Transcripts");
+  const file = meeting && meeting.clipId ? transcripts.findTranscript(dir, meeting.clipId) : null;
+  if (!file) return { ok: false, error: "No transcript is saved for this meeting yet." };
+  const err = await shell.openPath(file);
+  return { ok: !err, error: err || undefined };
+});
 
 ipcMain.handle("publish", () =>
   run(async () => {
@@ -150,7 +258,13 @@ if (process.env.ELOY_USER_DATA) app.setPath("userData", process.env.ELOY_USER_DA
 
 app.whenReady().then(() => {
   store = new ReviewStore(app.getPath("userData"));
+  cleanupTemp(tempDir());
   createWindow();
+});
+
+app.on("before-quit", () => {
+  // Stop a running download so ffmpeg does not keep going after the window closes.
+  if (currentJob) currentJob.controller.abort();
 });
 
 app.on("window-all-closed", () => app.quit());

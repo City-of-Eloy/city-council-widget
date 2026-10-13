@@ -8,7 +8,10 @@ contextBridge.exposeInMainWorld("review", {
   save: (id, fields) => ipcRenderer.invoke("meeting:save", id, fields),
   setStatus: (id, status) => ipcRenderer.invoke("meeting:status", id, status),
   resolveConflict: (id, choice) => ipcRenderer.invoke("meeting:resolve", id, choice),
-  rewrite: (id, draft) => ipcRenderer.invoke("meeting:rewrite", id, draft),
+  /** options: { retranscribe } */
+  summarize: (id, draft, options) => ipcRenderer.invoke("meeting:summarize", id, draft, options),
+  cancel: () => ipcRenderer.invoke("meeting:cancel"),
+  openTranscript: (id) => ipcRenderer.invoke("transcript:open", id),
   publish: () => ipcRenderer.invoke("publish"),
   saveSettings: (update) => ipcRenderer.invoke("settings:save", update),
   openExternal: (url) => ipcRenderer.invoke("open:external", url),

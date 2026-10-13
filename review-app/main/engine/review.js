@@ -1,5 +1,6 @@
-/** The review workflow: pull new meetings from OpenPublica, keep each one's
- *  review status and edits on this computer, and publish the approved ones.
+/** The review workflow: pull new recordings from Granicus, keep each one's
+ *  review status, summary and edits on this computer, and publish the
+ *  approved ones.
  *
  *  The published file on GitHub is the source of truth for what residents see.
  *  Each refresh reads it, so a second reviewer's computer stays in step. A local
@@ -11,16 +12,55 @@
 
 const fs = require("fs");
 const path = require("path");
-const { toDraft, reviewFlags, publishedRecord, buildPublishedFile } = require("./meetings");
+const {
+  toDraft,
+  sourceOf,
+  reviewFlags,
+  publishedRecord,
+  buildPublishedFile,
+  clipKey,
+  recordClipId,
+  normalizeRecord,
+} = require("./meetings");
 const { getPublished, putPublished, PublishError } = require("./github");
 
 const STATUSES = new Set(["review", "approved", "hidden"]);
-const EDITABLE_FIELDS = ["title", "overview", "details", "durationMinutes", "recordingUrl"];
+const EDITABLE_FIELDS = ["date", "title", "overview", "details", "durationMinutes", "recordingUrl"];
+/** How many of the newest Granicus recordings each refresh looks at. */
+const LISTING_LIMIT = 25;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Same published content; two missing records also count as the same. */
 function sameRecord(a, b) {
   if (!a || !b) return !a && !b;
   return JSON.stringify(publishedRecord(a)) === JSON.stringify(publishedRecord(b));
+}
+
+/** Why a draft can't be approved yet, or null. */
+function approvalProblem(draft) {
+  if (!String(draft.overview || "").trim()) return "Add an overview before approving. It's the part residents see first.";
+  if (!DATE.test(String(draft.date || ""))) return "Enter the meeting date before approving.";
+  return null;
+}
+
+function normalizeData(data) {
+  return { ...data, meetings: Array.from((data && data.meetings) || []).map(normalizeRecord) };
+}
+
+/** Meetings saved before the move to Granicus had OpenPublica ids; key them by Granicus clip instead. */
+function migrate(saved) {
+  const meetings = {};
+  for (const entry of Object.values(saved.meetings || {})) {
+    if (!entry || !entry.draft) continue;
+    const draft = normalizeRecord(entry.draft);
+    if (meetings[draft.id]) continue; // two old records for one clip: keep the first
+    const next = { ...entry, draft };
+    if (entry.base) next.base = normalizeRecord(entry.base);
+    if (entry.conflict && entry.conflict.website) next.conflict = { website: normalizeRecord(entry.conflict.website) };
+    meetings[draft.id] = next;
+  }
+  const published = saved.published ? { ...saved.published, data: normalizeData(saved.published.data) } : null;
+  return { meetings, published };
 }
 
 class ReviewStore {
@@ -32,8 +72,7 @@ class ReviewStore {
   _load() {
     if (!fs.existsSync(this.file)) return { meetings: {}, published: null };
     try {
-      const saved = JSON.parse(fs.readFileSync(this.file, "utf-8"));
-      return { meetings: saved.meetings || {}, published: saved.published || null };
+      return migrate(JSON.parse(fs.readFileSync(this.file, "utf-8")));
     } catch (e) {
       // Keep the damaged file for IT rather than silently losing unpublished edits.
       fs.renameSync(this.file, `${this.file}.corrupt-${Date.now()}`);
@@ -77,7 +116,7 @@ class ReviewStore {
 
   /** Read the published file and adopt anything another computer published. */
   _syncPublished(published) {
-    this.state.published = { sha: published.sha, data: published.data, checkedAt: new Date().toISOString() };
+    this.state.published = { sha: published.sha, data: normalizeData(published.data), checkedAt: new Date().toISOString() };
     const live = this._live();
     for (const [id, record] of live) {
       if (!this.state.meetings[id]) {
@@ -127,8 +166,8 @@ class ReviewStore {
     this._save();
   }
 
-  /** Pull new meetings and the published file. Returns { added, publishError }. */
-  async refresh({ openPublica, settings, onProgress = () => {} }) {
+  /** Pull new recordings and the published file. Returns { added, publishError }. */
+  async refresh({ granicus, settings, onProgress = () => {} }) {
     let publishError = null;
     if (settings.githubToken) {
       onProgress("Checking what is on the website…");
@@ -140,18 +179,24 @@ class ReviewStore {
       }
     }
 
-    onProgress("Checking OpenPublica for new meetings…");
-    const listing = await openPublica.listRecentMeetings({ limit: 25 });
-    const fresh = listing.filter((m) => !this.state.meetings[m.meeting_id]);
+    onProgress("Checking Granicus for new recordings…");
+    const listing = (await granicus.listMeetings()).slice(0, LISTING_LIMIT);
     let added = 0;
-    for (const meta of fresh) {
+    for (const clip of listing) {
+      const id = clipKey(clip.clipId);
+      const flags = reviewFlags(clip, listing);
+      const entry = this.state.meetings[id];
+      if (entry) {
+        // Keep the reviewer's work; refresh what Granicus says about the
+        // recording (for example, official minutes posted later).
+        entry.source = sourceOf(clip);
+        entry.flags = flags;
+        continue;
+      }
       added += 1;
-      onProgress(`Loading new meeting ${added} of ${fresh.length}…`);
-      const meeting = { ...meta, ...(await openPublica.getMeeting(meta.meeting_id, false)) };
-      const flags = reviewFlags(meeting, listing);
-      const { source, ...draft } = toDraft(meeting);
+      const { source, ...draft } = toDraft(clip);
       const autoHidden = flags.some((f) => f.code === "low-content");
-      this.state.meetings[meeting.meeting_id] = {
+      this.state.meetings[id] = {
         status: autoHidden ? "hidden" : "review",
         autoHidden,
         flags,
@@ -159,18 +204,6 @@ class ReviewStore {
         source,
         localChange: false,
       };
-      this._save(); // keep progress if the connection drops part way
-    }
-    // Duplicate-date warnings change as new recordings appear. The listing only
-    // has summary previews, so use the full summaries already loaded.
-    const known = listing.map((meta) => {
-      const entry = this.state.meetings[meta.meeting_id];
-      const summary = entry && entry.source && entry.source.summary;
-      return summary === undefined ? meta : { ...meta, summary };
-    });
-    for (const meeting of known) {
-      const entry = this.state.meetings[meeting.meeting_id];
-      if (entry && meeting.summary !== undefined) entry.flags = reviewFlags(meeting, known);
     }
     this._save();
     return { added, publishError };
@@ -182,8 +215,14 @@ class ReviewStore {
     for (const key of EDITABLE_FIELDS) {
       if (fields[key] !== undefined) next[key] = fields[key];
     }
-    if (entry.status === "approved" && !String(next.overview || "").trim()) {
-      throw new Error("An approved meeting needs an overview. Add one, or move the meeting back to review first.");
+    next.date = next.date ? String(next.date).trim() : null;
+    if (next.date && !DATE.test(next.date)) throw new Error("The meeting date must be a date like 2026-10-12.");
+    if (next.durationMinutes !== undefined && next.durationMinutes !== null) {
+      const n = Number(next.durationMinutes);
+      next.durationMinutes = Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+    }
+    if (entry.status === "approved" && approvalProblem(next)) {
+      throw new Error("An approved meeting needs an overview and a date. Add them, or move the meeting back to review first.");
     }
     this._markChanged(entry);
     entry.draft = next;
@@ -193,8 +232,9 @@ class ReviewStore {
   setStatus(id, status) {
     if (!STATUSES.has(status)) throw new Error(`Unknown status ${status}`);
     const entry = this._entry(id);
-    if (status === "approved" && !String(entry.draft.overview || "").trim()) {
-      throw new Error("Add an overview before approving. It's the part residents see first.");
+    if (status === "approved") {
+      const problem = approvalProblem(entry.draft);
+      if (problem) throw new Error(problem);
     }
     this._markChanged(entry);
     entry.status = status;
@@ -217,6 +257,7 @@ class ReviewStore {
     const meetings = Object.values(this.state.meetings)
       .map((entry) => ({
         id: entry.draft.id,
+        clipId: (entry.source && entry.source.clipId) || recordClipId(entry.draft),
         status: entry.status,
         autoHidden: Boolean(entry.autoHidden),
         flags: entry.flags || [],
@@ -226,7 +267,7 @@ class ReviewStore {
         pending: this._pendingChange(entry, live),
         conflict: entry.conflict ? { website: entry.conflict.website } : null,
       }))
-      .sort((a, b) => String(b.draft.date).localeCompare(String(a.draft.date)));
+      .sort((a, b) => String(b.draft.date || "").localeCompare(String(a.draft.date || "")));
     return {
       meetings,
       pendingCount: meetings.filter((m) => m.pending).length,
@@ -279,4 +320,4 @@ class ReviewStore {
   }
 }
 
-module.exports = { ReviewStore };
+module.exports = { ReviewStore, LISTING_LIMIT };
