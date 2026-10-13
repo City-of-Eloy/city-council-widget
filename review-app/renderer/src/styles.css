@@ -744,3 +744,28 @@ mark {
   color: inherit;
   border-radius: 2px;
 }
+
+/* Meeting list search */
+.sidebar-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.sidebar-head .tabs {
+  position: static;
+}
+
+.sidebar-search {
+  width: calc(100% - 20px);
+  margin: 8px 10px;
+}
+
+/* Three-digit counts still fit on one line */
+.tab {
+  padding: 10px 4px;
+  font-size: 13.5px;
+  white-space: nowrap;
+}

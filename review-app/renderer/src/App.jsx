@@ -604,6 +604,7 @@ export default function App() {
   const [progress, setProgress] = useState("");
   const [notice, setNotice] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [query, setQuery] = useState("");
   const dirtyRef = useRef(false);
   const onDirty = useRef((value) => {
     dirtyRef.current = value;
@@ -617,7 +618,10 @@ export default function App() {
   if (!state) return null;
 
   const byTab = (status) => state.meetings.filter((m) => m.status === status);
-  const list = byTab(tab);
+  const q = query.trim().toLowerCase();
+  const matchesQuery = (m) =>
+    !q || `${shortDate(m.draft.date)} ${m.draft.date || ""} ${m.source.title || ""} ${m.draft.title || ""}`.toLowerCase().includes(q);
+  const list = byTab(tab).filter(matchesQuery);
   const selected = state.meetings.find((m) => m.id === selectedId) || null;
   const settings = state.settings;
   const missing = [
@@ -710,24 +714,38 @@ export default function App() {
 
       <div className="main">
         <nav className="sidebar" aria-label="Meetings">
-          <div className="tabs" role="tablist">
-            {TABS.map((t) => (
-              <button
-                key={t.status}
-                role="tab"
-                aria-selected={tab === t.status}
-                className={tab === t.status ? "tab active" : "tab"}
-                onClick={() => setTab(t.status)}
-              >
-                {t.label} <span className="count">{byTab(t.status).length}</span>
-              </button>
-            ))}
+          <div className="sidebar-head">
+            <div className="tabs" role="tablist">
+              {TABS.map((t) => (
+                <button
+                  key={t.status}
+                  role="tab"
+                  aria-selected={tab === t.status}
+                  className={tab === t.status ? "tab active" : "tab"}
+                  onClick={() => setTab(t.status)}
+                >
+                  {t.label} <span className="count">{byTab(t.status).length}</span>
+                </button>
+              ))}
+            </div>
+            {state.meetings.length > 0 && (
+              <input
+                className="sidebar-search"
+                type="search"
+                placeholder="Search by date or name…"
+                aria-label="Search meetings"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            )}
           </div>
           {list.length === 0 && (
             <p className="empty">
               {state.meetings.length === 0
                 ? "Click Check for new meetings to load recordings from Granicus."
-                : "Nothing here."}
+                : q
+                  ? "No meetings match."
+                  : "Nothing here."}
             </p>
           )}
           <ul className="meeting-list">

@@ -59,7 +59,7 @@ If two people review on different PCs, each **Check for new meetings** picks up 
 
 ## How a summary is made
 
-1. **Granicus listing.** `ViewPublisher.php?view_id=1` gives the name, date, length, agenda link, minutes link, and video link for every recording. The app looks at the 25 newest each time.
+1. **Granicus listing.** `ViewPublisher.php?view_id=1` gives the name, date, length, agenda link, minutes link, and video link for every recording in the archive. The app lists all of them, so older meetings can be summarized too; the search box above the list finds one by date or name.
 2. **Audio.** The bundled ffmpeg streams the recording from Granicus and keeps only a small mono MP3 (about 30 MB per hour). Granicus serves video only to browser-like requests, so the app sends a browser User-Agent and a Granicus Referer. A 90-minute meeting moves about 1 GB over the network.
 3. **Transcript.** The MP3 goes to Deepgram (Nova-3, speaker separation) and is saved as `<date> <meeting> Transcript (clip N).txt`. If Granicus ever publishes captions for a clip, those are used instead and Deepgram is skipped.
 4. **Agenda.** The posted agenda is read from Granicus (`AgendaViewer.php`). If there is none, the summary comes from the transcript alone and the app says so.

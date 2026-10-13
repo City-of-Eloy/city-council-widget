@@ -26,8 +26,6 @@ const { getPublished, putPublished, PublishError } = require("./github");
 
 const STATUSES = new Set(["review", "approved", "hidden"]);
 const EDITABLE_FIELDS = ["date", "title", "overview", "details", "durationMinutes", "recordingUrl"];
-/** How many of the newest Granicus recordings each refresh looks at. */
-const LISTING_LIMIT = 25;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Same published content; two missing records also count as the same. */
@@ -180,7 +178,8 @@ class ReviewStore {
     }
 
     onProgress("Checking Granicus for new recordings…");
-    const listing = (await granicus.listMeetings()).slice(0, LISTING_LIMIT);
+    // Every recording in the archive, so older meetings can be summarized too.
+    const listing = await granicus.listMeetings();
     let added = 0;
     for (const clip of listing) {
       const id = clipKey(clip.clipId);
@@ -320,4 +319,4 @@ class ReviewStore {
   }
 }
 
-module.exports = { ReviewStore, LISTING_LIMIT };
+module.exports = { ReviewStore };
